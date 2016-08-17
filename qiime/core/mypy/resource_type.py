@@ -11,6 +11,10 @@ from typing import Generic, TypeVar, GenericMeta
 T = TypeVar('T')
 
 class ResourceMeta(GenericMeta):
+    """
+    | I think the tl;dr is "please don't do that".
+                                    - Guido van Rossum BDFL
+    """
     _registry = {}
 
     def __new__(cls, name, bases, dct, pattern=None):
