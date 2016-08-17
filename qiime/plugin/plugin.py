@@ -61,6 +61,10 @@ class Plugin:
     def register_data_layout_writer(self, name, version, view_type, writer):
         self.data_layout_writers[(name, version, view_type)] = writer
 
+    def register_transformation(self, transformer):
+        annotations = transformer.__annotations__
+
+
     def register_semantic_type(self, semantic_type):
         if not is_semantic_type(semantic_type):
             raise TypeError("%r is not a semantic type." % semantic_type)

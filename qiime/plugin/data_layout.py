@@ -8,8 +8,10 @@
 
 import os
 import os.path
+import types
 
 from .file_format import FileFormat
+from .group import Group
 
 
 class ValidationError(Exception):
@@ -27,6 +29,15 @@ class DataLayout:
         self._finalized = False
         self._reader_views = {}
         self._writer_views = {}
+        self._group = {}
+
+    @property
+    def group(self):
+        return types.MappingProxyType(self._group)
+
+    def add_group(self, **kwargs):
+        group = Group(**kwargs)
+        self._group[group.name] = group
 
     def register_file(self, relpath, file_format_type):
         if self._finalized:
