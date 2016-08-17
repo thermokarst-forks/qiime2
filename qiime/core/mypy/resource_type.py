@@ -41,6 +41,6 @@ class FilePath(str, Generic[T], metaclass=ResourceMeta):
 class DirectoryPath(str, Generic[T], metaclass=ResourceMeta):
     pass
 
-# 
+#
 # class Object(Generic[T], metaclass=ResourceMeta):
 #     pass
