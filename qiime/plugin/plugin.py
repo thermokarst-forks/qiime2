@@ -39,9 +39,24 @@ class Plugin:
 
         self.types = {}
 
+        self.transformers = {}
 
-    def register_transformation(self, transformer):
-        annotations = transformer.__annotations__
+
+    def register_transformer(self, transformer):
+        """
+        A transformer has the type Callable[[type], type]
+        """
+        # TODO: the future of this is unkown
+        annotations = transformer.__annotations__.copy()
+        if len(annotations) != 2:
+            raise TypeError()
+        if type(annotations['return']) is tuple:
+            raise TypeError()
+        output = annotations.pop('return')
+        input = list(annotations.values())[0]
+
+        self.transformers[input, output] = transformer
+
 
     # TODO: How do we associate semantic types with default directory formats?
     def register_semantic_type(self, semantic_type, directory_format=None):

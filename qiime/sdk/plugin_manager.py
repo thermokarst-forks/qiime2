@@ -28,6 +28,7 @@ class PluginManager:
         self.plugins = {}
         self.data_layouts = {}
         self.semantic_types = {}
+        self.transformers = collections.defaultdict(dict)
         self._semantic_type_to_data_layouts = {}
 
         plugins = []
@@ -79,15 +80,12 @@ class PluginManager:
             self._semantic_type_to_data_layouts[semantic_type] = \
                 self.data_layouts[data_layout_id][1]
 
-        for reader_registration, reader in plugin.data_layout_readers.items():
-            name, version, view_type = reader_registration
-            _, data_layout = self.data_layouts[(name, version)]
-            data_layout.reader(view_type)(reader)
 
-        for writer_registration, writer in plugin.data_layout_writers.items():
-            name, version, view_type = writer_registration
-            _, data_layout = self.data_layouts[(name, version)]
-            data_layout.writer(view_type)(writer)
+        for (input, output), transformer in plugin.transformers.items():
+            if output in self.transformers[input]:
+                raise ValueError("Transformer from %r to %r already exists."
+                                 % transformation)
+            self.transformers[input][output] = transformer
 
     # TODO: Should plugin loading be transactional? i.e. if there's
     # something wrong, the entire plugin fails to load any piece, like a

@@ -5,6 +5,8 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+import qiime.core.viewlib as viewlib
+
 
 
 class _DirectoryMeta(type):
@@ -19,12 +21,28 @@ class DirectoryFormat(metaclass=_DirectoryMeta):
     pass
 
 
+
+class PathMakerDescriptor:
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, obj, cls=None):
+        if obj is None:
+            raise Exception()
+        return getattr(obj, self.name).path_maker
+
+
 class File:
     def __init__(self, pathspec, *, format=None):
         if format is None:
             raise TypeError()
         self.pathspec = pathspec
         self.format = format
+
+    def __get__(self, obj, cls=None):
+        if obj is None:
+            return self
+        return BoundFile(self.name, self.pathspec, self.format, obj)
 
 
 class FileCollection(File):
@@ -43,38 +61,23 @@ class FileCollection(File):
         if self._path_maker is None:
             raise NotImplementedError()
 
-        return BoundFileCollection(obj, self.name, self.pathspec, self.format,
-                                   pathmaker=self._path_maker)
-
-
-class PathMakerDescriptor:
-    def __init__(self, name):
-        self.name = name
-
-    def __get__(self, obj, cls=None):
-        if obj is None:
-            raise Exception()
-        return getattr(obj, self.name).path_maker
-
+        return BoundFileCollection(self.name, self.pathspec, self.format,
+                                   obj, path_maker=self._path_maker)
 
 
 class BoundFile:
-    pass
-
-
-class BoundFileCollection(BoundFile):
-    def __init__(self, name, directory_format, pathspec, format, path_maker):
+    def __init__(self, name, pathspec, format, directory_format):
         self.name = name
         self.pathspec = pathspec
         self.format = format
-
         self._directory_format = directory_format
-        self._path_maker = path_maker
+        self._path_maker = lambda: self.pathspec
 
     def view(self, view_type):
-        pass
+        resource_pattern = viewlib.interpreter(view_type)
+        
 
-    def inject(self, filepath, view_type):
+    def add(self, source, view_type):
         pass
 
     @property
@@ -82,6 +85,12 @@ class BoundFileCollection(BoundFile):
         def bound_path_maker(**kwargs):
             return self._path_maker(self._directory_format, self, **kwargs)
         return bound_path_maker
+
+
+class BoundFileCollection(BoundFile):
+    def __init__(self, name, pathspec, format, directory_format, path_maker):
+        super().__init__(name, pathspec, format, directory_format)
+        self._path_maker = path_maker
 
 
 class ExampleDirectoryFormat(resource.DirectoryFormat):
@@ -93,7 +102,7 @@ class ExampleDirectoryFormat(resource.DirectoryFormat):
         self._curr_id = 0
 
     @something.set_path_maker
-    def something_path_maker(self, collection):
+    def something_path_maker(self, something):
         path = "%d.fastq" % self._curr_id
         self._curr_id += 1
         return path

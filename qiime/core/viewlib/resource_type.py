@@ -14,6 +14,10 @@ class ResourceMeta(GenericMeta):
     """
     | I think the tl;dr is "please don't do that".
                                     - Guido van Rossum BDFL
+
+    This will be replaced with something else depending on the outcome of:
+        https://github.com/python/typing/issues/263
+
     """
     _registry = {}
 
