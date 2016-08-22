@@ -18,3 +18,7 @@ class FileFormat(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sniff(cls, filepath):
         raise NotImplementedError
+
+
+    def __init__(self, path):
+        self.path = path

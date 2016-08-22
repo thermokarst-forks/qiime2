@@ -26,10 +26,8 @@ class PluginManager:
 
     def _init(self):
         self.plugins = {}
-        self.data_layouts = {}
         self.semantic_types = {}
         self.transformers = collections.defaultdict(dict)
-        self._semantic_type_to_data_layouts = {}
 
         plugins = []
         for entry_point in pkg_resources.iter_entry_points(

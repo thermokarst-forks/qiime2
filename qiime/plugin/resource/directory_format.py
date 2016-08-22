@@ -18,8 +18,8 @@ class _DirectoryMeta(type):
 
 
 class DirectoryFormat(metaclass=_DirectoryMeta):
-    pass
-
+    def __init__(self, path):
+        self.path = path
 
 
 class PathMakerDescriptor:
@@ -74,8 +74,11 @@ class BoundFile:
         self._path_maker = lambda: self.pathspec
 
     def view(self, view_type):
+        self_pattern = viewlib.interpreter(FilePath[self.format])
         resource_pattern = viewlib.interpreter(view_type)
-        
+        transformation = self_pattern.make_transformation(resource_pattern)
+        return transformation(os.path.join(self._directory_format.path,
+                                           self.pathspec))
 
     def add(self, source, view_type):
         pass
@@ -91,6 +94,16 @@ class BoundFileCollection(BoundFile):
     def __init__(self, name, pathspec, format, directory_format, path_maker):
         super().__init__(name, pathspec, format, directory_format)
         self._path_maker = path_maker
+
+    def view(self, view_type):
+        paths = [fp for fp in os.listdir(self._directory_format.path)
+                 if re.match(self.pathspec, fp)]
+        self_pattern = viewlib.interpreter(FilePath[self.format])
+        resource_pattern = viewlib.interpreter(view_type)
+        transformation = self_pattern.make_transformation(resource_pattern)
+        for fp in paths:
+            yield transformation(fp)
+
 
 
 class ExampleDirectoryFormat(resource.DirectoryFormat):

@@ -129,13 +129,17 @@ class Artifact(Result):
             return False
 
     @classmethod
-    def import_data(cls, type, path):
+    def import_data(cls, type, source, *, format=None):
         # Note: `import` is a better name for this method but it's a reserved
         # word in Python and can't be used as a function/method name. We use
         # `import_data` because this method will accept views (i.e. Python
         # objects) in the future in addition to files/directories. These all
         # represent an artifact's data and it is this method's responsibility
         # to transform that data into a relevant data layout.
+        if format is None:
+            # lookup default format for the type
+            pass
+
         if isinstance(type, str):
             type = qiime.sdk.parse_type(type)
         if not cls._is_valid_type(type):

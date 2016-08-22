@@ -10,9 +10,16 @@ import pkg_resources
 
 import qiime.sdk
 import qiime.core.type.grammar as grammar
+import qiime.core.resource as resource
 from qiime.core.type import is_semantic_type
 
 from .data_layout import DataLayout
+
+
+TransformerRecord = collections.namedtuple(
+    'TransformerRecord', ['transformer', 'plugin'])
+SemanticTypeRecord = collections.namedtuple(
+    'SemanticTypeRecord', ['semantic_type', 'artifact_format', 'plugin'])
 
 
 class Plugin:
@@ -38,7 +45,6 @@ class Plugin:
         self.visualizers = PluginVisualizers(self.name)
 
         self.types = {}
-
         self.transformers = {}
 
 
@@ -46,7 +52,6 @@ class Plugin:
         """
         A transformer has the type Callable[[type], type]
         """
-        # TODO: the future of this is unkown
         annotations = transformer.__annotations__.copy()
         if len(annotations) != 2:
             raise TypeError()
@@ -55,11 +60,14 @@ class Plugin:
         output = annotations.pop('return')
         input = list(annotations.values())[0]
 
-        self.transformers[input, output] = transformer
+        self.transformers[input, output] = TransformerRecord(
+            transformer=transformer, plugin=self)
 
 
-    # TODO: How do we associate semantic types with default directory formats?
-    def register_semantic_type(self, semantic_type, directory_format=None):
+    def register_semantic_type(self, semantic_type, artifact_format):
+        if not issubclass(artifact_format, resource.DirectoryFormat):
+            raise TypeError("%r is not a directory format." % artifact_format)
+
         if not is_semantic_type(semantic_type):
             raise TypeError("%r is not a semantic type." % semantic_type)
 
@@ -72,7 +80,9 @@ class Plugin:
             raise ValueError("Duplicate semantic type symbol %r."
                              % semantic_type)
 
-        self.types[semantic_type.name] = semantic_type
+        self.types[semantic_type.name] = SemanticTypeRecord(
+            semantic_type=semantic_type, artifact_format=artifact_format,
+            plugin=self)
 
 
 class PluginMethods(dict):

@@ -27,7 +27,7 @@ yaml.add_representer(collections.OrderedDict, lambda dumper, data:
 class Archiver:
     # This class will likely defer to one of many ArchiveFormats in the future.
     # There's only one supported archive format currently.
-    _VERSION = '0.1.0'
+    _VERSION = '0.2.0'
     _VERSION_FILENAME = 'VERSION'
     _README_FILENAME = 'README.md'
     _METADATA_FILENAME = 'metadata.yaml'

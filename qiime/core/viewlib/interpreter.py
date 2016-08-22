@@ -8,6 +8,7 @@
 
 import qiime.sdk as sdk
 from .resource_type import ResourceMeta
+from ..path import TempPath
 
 
 class ResourcePattern:
@@ -20,10 +21,10 @@ class ResourcePattern:
         if not has_trans:
             raise Exception()
 
-        def transform(view):
+        def transformation(view):
             transformer_lookup = self._pm.transformers[key]
 
-        return transform
+        return transformation
 
 
     def has_transformation(self, other):
@@ -40,18 +41,11 @@ class ResourcePattern:
         return any(key in views for key in self.transformer_keys())
 
 
-class FilePathResourcePattern(ResourcePattern):
+class TempPathResourcePattern(ResourcePattern):
 
     def transformer_keys(self):
         yield self.expression
-        yield self.expression.__pattern__
-
-
-class DirectoryPathResourcePattern(ResourcePattern):
-
-    def transformer_keys(self):
-        yield self.expression
-        yield self.expression.__pattern__
+        yield from self.expression.__args__
 
 
 class ObjectViewResourcePattern(ResourcePattern):
@@ -61,13 +55,7 @@ class ObjectViewResourcePattern(ResourcePattern):
 
 
 def interpreter(view_type: type) -> ResourcePattern:
-    if type(view_type) is ResourceMeta:
-        name = view_type.__name__
-        if name == "FilePath":
-            return FilePathResourcePattern(view_type)
-        elif name == "DirectoryPath":
-            return DirectoryPathResourcePattern(view_type)
-        else:
-            raise TypeError()
+    if type(view_type) is TempPath:
+        return TempPathResourcePattern(view_type)
     else:
         return ObjectViewResourcePattern(view_type)
