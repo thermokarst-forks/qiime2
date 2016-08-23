@@ -304,12 +304,13 @@ class Method:
             output_artifacts = []
             for output_view, (semantic_type, view_type) in \
                     zip(output_views, output_types.values()):
+                # TODO: validate things like the format if applicable
                 if not type(output_view) is view_type:
                     raise TypeError(
                         "Expected output view type %r, received %r" %
                         (view_type.__name__, type(output_view).__name__))
                 artifact = qiime.sdk.Artifact._from_view(
-                    output_view, semantic_type, provenance)
+                    semantic_type, output_view, view_type, provenance)
                 artifact._orphan(self._pid)
                 output_artifacts.append(artifact)
 

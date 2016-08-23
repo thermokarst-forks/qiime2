@@ -52,22 +52,32 @@ class FileCollection(File):
 
 
 class BoundFile:
+    @property
+    def mode(self):
+        return self._directory_format.mode
+
     def __init__(self, name, pathspec, format, directory_format):
         self.name = name
         self.pathspec = pathspec
         self.format = format
         self._directory_format = directory_format
-        self._path_maker = lambda: self.pathspec
+        self._path_maker = lambda: os.path.join(self._directory_format.path,
+                                                self.pathspec)
 
     def view(self, view_type):
         self_pattern = viewlib.interpreter(FilePath[self.format])
         resource_pattern = viewlib.interpreter(view_type)
         transformation = self_pattern.make_transformation(resource_pattern)
-        return transformation(os.path.join(self._directory_format.path,
-                                           self.pathspec))
+        return transformation(self._path_maker())
 
-    def add(self, source, view_type):
-        pass
+    def set(self, view, view_type, **kwargs):
+        if self.mode != 'w':
+            raise TypeError("Cannot use `set`/`add` when mode=%r" % self.mode)
+        resource_pattern = ResourcePattern.from_type(view_type)
+        self_pattern = viewlib.interpreter(self.format)
+        transformation = resource_pattern.make_transformation(self_pattern)
+        result = transformation(view)
+        result.move(self._path_maker(**kwargs))
 
     @property
     def path_maker(self):
@@ -82,13 +92,20 @@ class BoundFileCollection(BoundFile):
         self._path_maker = path_maker
 
     def view(self, view_type):
-        paths = [fp for fp in os.listdir(self._directory_format.path)
+        root = self._directory_format.path
+        paths = [os.path.join(root, fp) for fp in os.listdir(root)
                  if re.match(self.pathspec, fp)]
         self_pattern = viewlib.interpreter(FilePath[self.format])
         resource_pattern = viewlib.interpreter(view_type)
         transformation = self_pattern.make_transformation(resource_pattern)
         for fp in paths:
             yield transformation(fp)
+
+    def set(self, view, view_type, **kwargs):
+        raise TypeError("Cannot set an entire file collection.")
+
+    def add(self, view, view_type, **kwargs):
+        super().set(view, view_type, **kwargs)
 
 
 class _DirectoryMeta(type):
@@ -100,12 +117,22 @@ class _DirectoryMeta(type):
 
 
 class DirectoryFormat(metaclass=_DirectoryMeta):
-    @classmethod
-    def sniff(self):
-        pass
+    def move(self, dst):
+        """Matches shutil.move"""
+        if not os.path.isdir(self.path):
+            raise IOError("%r is not bound to a file." % self)
+        shutil.move(self.path, dst)
+        self.path = dst
 
-    def __init__(self, path):
-        self.path = path
+
+    def __init__(self, path=None, mode='w'):
+        if path is None:
+            self._path = tempfile.mkstemp(
+                dir=True, prefix='q2-%r' % self.__class__.__name__)
+        else:
+            self._path = path
+        self.path = str(self._path)
+        self.mode = mode
 
 
 # BEGIN TODO: Drop these examples when done playing

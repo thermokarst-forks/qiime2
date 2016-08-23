@@ -17,7 +17,7 @@ import yaml
 import zipfile
 
 import qiime.sdk
-from .util import parse_type
+import qiime.core.util as util
 
 # Allow OrderedDict to be serialized for YAML representation
 yaml.add_representer(collections.OrderedDict, lambda dumper, data:
@@ -90,9 +90,10 @@ class Archiver:
                 metadata = yaml.safe_load(fh)
 
         uuid_ = cls._parse_uuid(metadata['uuid'])
-        type_ = parse_type(metadata['type'])
+        type_ = util.parse_type(metadata['type'])
         provenance = cls._parse_provenance(metadata['provenance'])
-        return uuid_, type_, provenance
+        data = metadata['data']
+        return uuid_, type_, provenance, data
 
     @classmethod
     def _parse_uuid(cls, string):
@@ -115,8 +116,8 @@ class Archiver:
                 parameter_references=provenance['parameter-references']
             )
 
-    def __init__(self, uuid, type, provenance, archive_filepath=None,
-                 data_initializer=None):
+    def __init__(self, uuid, type, provenance, data_spec,
+                 archive_filepath=None, data_initializer=None):
         """
 
         Parameters
