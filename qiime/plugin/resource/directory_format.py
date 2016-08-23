@@ -8,20 +8,6 @@
 import qiime.core.viewlib as viewlib
 
 
-
-class _DirectoryMeta(type):
-    def __init__(self, name, bases, dct):
-        super().__init__(self, name, bases, dct)
-        for key, value in dct.items():
-            if isinstance(value, File):
-                value.name = key
-
-
-class DirectoryFormat(metaclass=_DirectoryMeta):
-    def __init__(self, path):
-        self.path = path
-
-
 class PathMakerDescriptor:
     def __init__(self, name):
         self.name = name
@@ -105,24 +91,42 @@ class BoundFileCollection(BoundFile):
             yield transformation(fp)
 
 
-
-class ExampleDirectoryFormat(resource.DirectoryFormat):
-    something = resource.FileCollection("[0-9]*\.fastq", format=FASTQFileFormat)
-
-    other = resource.File('example.txt', format=ExampleFormat)
-
-    def __init__(self):
-        self._curr_id = 0
-
-    @something.set_path_maker
-    def something_path_maker(self, something):
-        path = "%d.fastq" % self._curr_id
-        self._curr_id += 1
-        return path
+class _DirectoryMeta(type):
+    def __init__(self, name, bases, dct):
+        super().__init__(name, bases, dct)
+        for key, value in dct.items():
+            if isinstance(value, File):
+                value.name = key
 
 
-class ExampleFormat(resource.FileFormat):
-    def sniff(file):
-        return True
+class DirectoryFormat(metaclass=_DirectoryMeta):
+    @classmethod
+    def sniff(self):
+        pass
 
-dirfmt.something.path_maker(foo='bar')
+    def __init__(self, path):
+        self.path = path
+
+
+# BEGIN TODO: Drop these examples when done playing
+# class ExampleDirectoryFormat(resource.DirectoryFormat):
+#     something = resource.FileCollection("[0-9]*\.fastq",
+#                                         format=FASTQFileFormat)
+#     other = resource.File('example.txt', format=ExampleFormat)
+#
+#     def __init__(self):
+#         self._curr_id = 0
+#
+#     @something.set_path_maker
+#     def something_path_maker(self, something):
+#         path = "%d.fastq" % self._curr_id
+#         self._curr_id += 1
+#         return path
+#
+#
+# class ExampleFormat(resource.FileFormat):
+#     def sniff(file):
+#         return True
+#
+# dirfmt.something.view(List[skbio.DNA])
+# END TODO

@@ -9,8 +9,6 @@
 import abc
 
 
-# TODO do we need to version these file formats, or is versioning of data
-# layouts enough?
 class FileFormat(metaclass=abc.ABCMeta):
     name = NotImplemented
 
@@ -18,7 +16,3 @@ class FileFormat(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sniff(cls, filepath):
         raise NotImplementedError
-
-
-    def __init__(self, path):
-        self.path = path

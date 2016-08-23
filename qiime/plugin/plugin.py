@@ -6,14 +6,13 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import collections
 import pkg_resources
 
 import qiime.sdk
 import qiime.core.type.grammar as grammar
-import qiime.core.resource as resource
+from qiime.plugin.resource import DirectoryFormat
 from qiime.core.type import is_semantic_type
-
-from .data_layout import DataLayout
 
 
 TransformerRecord = collections.namedtuple(
@@ -47,7 +46,6 @@ class Plugin:
         self.types = {}
         self.transformers = {}
 
-
     def register_transformer(self, transformer):
         """
         A transformer has the type Callable[[type], type]
@@ -63,9 +61,8 @@ class Plugin:
         self.transformers[input, output] = TransformerRecord(
             transformer=transformer, plugin=self)
 
-
     def register_semantic_type(self, semantic_type, artifact_format):
-        if not issubclass(artifact_format, resource.DirectoryFormat):
+        if not issubclass(artifact_format, DirectoryFormat):
             raise TypeError("%r is not a directory format." % artifact_format)
 
         if not is_semantic_type(semantic_type):

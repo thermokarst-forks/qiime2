@@ -6,15 +6,14 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import qiime.sdk as sdk
-from .resource_type import ResourceMeta
-from ..path import TempPath
+from qiime.sdk import PluginManager
+from .path import TempPath
 
 
 class ResourcePattern:
     def __init__(self, expression):
         self.expression = expression
-        self._pm = sdk.PluginManager()
+        self._pm = PluginManager()
 
     def make_transformation(self, other):
         has_trans, key = self.has_transformation(other)
@@ -26,14 +25,13 @@ class ResourcePattern:
 
         return transformation
 
-
     def has_transformation(self, other):
-        if not self.can_coerce(self._pm.transformers.keys())
+        if not self.can_coerce(self._pm.transformers.keys()):
             return False
 
         for key in self.transformer_keys():
             possible_results = self._pm.transformers[key].keys()
-            if other.can_coerce(possible_results)
+            if other.can_coerce(possible_results):
                 return True, key
         return False, None
 
@@ -42,14 +40,12 @@ class ResourcePattern:
 
 
 class TempPathResourcePattern(ResourcePattern):
-
     def transformer_keys(self):
         yield self.expression
         yield from self.expression.__args__
 
 
 class ObjectViewResourcePattern(ResourcePattern):
-
     def transformer_keys(self):
         yield self.expression
 
