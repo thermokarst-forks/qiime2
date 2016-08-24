@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from .directory_format import DirectoryFormat, File, FileCollection
-from .file_format import FileFormat
+from .file_format import TextFileFormat, BinaryFileFormat
 
 
-__all__ = ['DirectoryFormat', 'File', 'FileCollection', 'FileFormat']
+__all__ = ['DirectoryFormat', 'File', 'FileCollection', 'TextFileFormat',
+           'BinaryFileFormat']

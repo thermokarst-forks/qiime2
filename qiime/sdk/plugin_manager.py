@@ -51,7 +51,7 @@ class PluginManager:
                 conflicting_type_record = self.semantic_types[type_name]
                 raise ValueError("Duplicate semantic type (%r) defined in"
                                  " plugins: %r and %r"
-                                 % (type_expr, type_record.plugin.name,
+                                 % (type_name, type_record.plugin.name,
                                     conflicting_type_record.plugin.name))
 
             self.semantic_types[type_name] = type_record
@@ -59,7 +59,7 @@ class PluginManager:
         for (input, output), transformer_record in plugin.transformers.items():
             if output in self.transformers[input]:
                 raise ValueError("Transformer from %r to %r already exists."
-                                 % transformation)
+                                 % transformer_record)
             self.transformers[input][output] = transformer_record
 
         self.type_formats.extend(plugin.type_formats)

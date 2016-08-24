@@ -11,13 +11,12 @@ import distutils.dir_util
 import functools
 import os
 import os.path
-import shutil
 import uuid
 
 import qiime.sdk
 import qiime.core.archiver as archiver
 import qiime.core.type
-import qiime.core.util
+import qiime.core.util as util
 import qiime.core.transform as transform
 import qiime.core.path as path
 
@@ -60,17 +59,17 @@ class Result:
     @classmethod
     def load(cls, filepath):
         """Factory for loading Artifacts and Visualizations."""
-        archiver = archiver.Archiver.load(filepath)
+        archiver_ = archiver.Archiver.load(filepath)
 
-        if Artifact._is_valid_type(archiver.type):
+        if Artifact._is_valid_type(archiver_.type):
             result = Artifact.__new__(Artifact)
-        elif Visualization._is_valid_type(archiver.type):
+        elif Visualization._is_valid_type(archiver_.type):
             result = Visualization.__new__(Visualization)
         else:
             raise TypeError(
                 "Cannot load filepath %r into an Artifact or Visualization "
                 "because type %r is not supported."
-                % (filepath, archiver.type))
+                % (filepath, archiver_.type))
 
         if type(result) is not cls and cls is not Result:
             raise TypeError(
@@ -78,7 +77,7 @@ class Result:
                 % (type(result).__name__, cls.__name__,
                    type(result).__name__))
 
-        result._archiver = archiver
+        result._archiver = archiver_
         return result
 
     @classmethod
@@ -152,7 +151,7 @@ class Artifact(Result):
         if not cls._is_valid_type(type):
             raise TypeError(
                 "An artifact requires a concrete semantic type, not type %r."
-                % type_)
+                % type)
 
         pm = qiime.sdk.PluginManager()
         output_dir_fmt = pm.get_directory_format(type)
@@ -170,15 +169,17 @@ class Artifact(Result):
         result = transformation(view)
 
         artifact = cls.__new__(cls)
+        # TODO: Fix the initialization of _archiver
+        # Need data_spec
         artifact._archiver = archiver.Archiver(
-            uuid.uuid4(), type, provenance, output_dir_format.__name__,
+            uuid.uuid4(), type, provenance, output_dir_fmt.__name__,
             data_initializer=result.move)
         return artifact
 
     def view(self, view_type):
         from_pattern = transform.ResourcePattern.from_view_type(
             path.InPath[self.format])
-        to_pattern =  transform.ResourcePattern.from_view_type(view_type)
+        to_pattern = transform.ResourcePattern.from_view_type(view_type)
         transformation = from_pattern.make_transformation(to_pattern)
         return self._archiver.load_data(transformation)
 

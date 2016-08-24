@@ -11,6 +11,7 @@ import tempfile
 import unittest
 import uuid
 import warnings
+import typing
 
 import qiime.core.type
 from qiime.sdk import Result, Artifact, Visualization, Provenance
@@ -74,8 +75,8 @@ class TestResult(unittest.TestCase):
             Artifact.load(fp)
 
     def test_load_artifact_as_visualization(self):
-        artifact = Artifact._from_view([0, 0, 42, 1000], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [0, 0, 42, 1000],
+                                       typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
 
@@ -94,8 +95,8 @@ class TestResult(unittest.TestCase):
             Artifact.extract(fp, self.test_dir)
 
     def test_extract_artifact_as_visualization(self):
-        artifact = Artifact._from_view([0, 0, 42, 1000], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [0, 0, 42, 1000],
+                                       typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
 
@@ -114,8 +115,8 @@ class TestResult(unittest.TestCase):
             Artifact.peek(fp)
 
     def test_peek_artifact_as_visualization(self):
-        artifact = Artifact._from_view([0, 0, 42, 1000], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [0, 0, 42, 1000],
+                                       typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
 
@@ -124,8 +125,8 @@ class TestResult(unittest.TestCase):
             Visualization.peek(fp)
 
     def test_load_artifact(self):
-        saved_artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                             self.provenance)
+        saved_artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                             typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         saved_artifact.save(fp)
 
@@ -135,7 +136,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(artifact.type, FourInts)
         self.assertEqual(artifact.provenance, self.provenance)
         self.assertEqual(artifact.uuid, saved_artifact.uuid)
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
 
     def test_load_visualization(self):
         saved_visualization = Visualization._from_data_dir(self.data_dir,
@@ -152,8 +153,8 @@ class TestResult(unittest.TestCase):
 
     def test_extract_artifact(self):
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], self.provenance)
         artifact.save(fp)
 
         output_dir = os.path.join(self.test_dir.name, 'artifact-extract-test')
@@ -195,8 +196,8 @@ class TestResult(unittest.TestCase):
                             'File %s was not extracted.' % fp)
 
     def test_peek_artifact(self):
-        artifact = Artifact._from_view([0, 0, 42, 1000], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [0, 0, 42, 1000],
+                                       typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
 
@@ -221,8 +222,8 @@ class TestResult(unittest.TestCase):
         self.assertEqual(metadata.uuid, visualization.uuid)
 
     def test_save_artifact_warning(self):
-        artifact = Artifact._from_view([0, 0, 42, 1000], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [0, 0, 42, 1000],
+                                       typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.zip')
 
         with warnings.catch_warnings(record=True) as w:

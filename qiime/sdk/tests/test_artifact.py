@@ -13,9 +13,10 @@ import tempfile
 import unittest
 import uuid
 import zipfile
+import typing
 
 import qiime.core.type
-from qiime.plugin.data_layout import ValidationError
+from qiime.plugin.resource.directory_format import ValidationError
 from qiime.sdk import Artifact, Provenance
 from qiime.sdk.result import ResultMetadata
 
@@ -69,37 +70,40 @@ class TestArtifact(unittest.TestCase):
     # in case the internals change.
 
     def test_from_view(self):
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts, None)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], None)
 
         self.assertEqual(artifact.type, FourInts)
         self.assertIsNone(artifact.provenance)
         # We don't know what the UUID is because it's generated within
         # Artifact._from_view.
         self.assertIsInstance(artifact.uuid, uuid.UUID)
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
         # Can produce same view if called again.
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
 
     def test_from_view_with_provenance(self):
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], self.provenance)
 
         self.assertEqual(artifact.type, FourInts)
         self.assertEqual(artifact.provenance, self.provenance)
         self.assertIsInstance(artifact.uuid, uuid.UUID)
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
 
     def test_from_view_different_type_with_multiple_view_types(self):
-        artifact = Artifact._from_view([42, 42, 43, -999, 42], IntSequence1,
-                                       None)
+        artifact = Artifact._from_view(IntSequence1, [42, 42, 43, -999, 42],
+                                       typing.List[int], None)
 
         self.assertEqual(artifact.type, IntSequence1)
         self.assertIsNone(artifact.provenance)
         self.assertIsInstance(artifact.uuid, uuid.UUID)
 
-        self.assertEqual(artifact.view(list), [42, 42, 43, -999, 42])
-        self.assertEqual(artifact.view(list), [42, 42, 43, -999, 42])
+        self.assertEqual(artifact.view(typing.List[int]),
+                         [42, 42, 43, -999, 42])
+        self.assertEqual(artifact.view(typing.List[int]),
+                         [42, 42, 43, -999, 42])
 
         self.assertEqual(artifact.view(collections.Counter),
                          collections.Counter({42: 3, 43: 1, -999: 1}))
@@ -110,8 +114,8 @@ class TestArtifact(unittest.TestCase):
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         # Using four-ints data layout because it has multiple files, some of
         # which are in a nested directory.
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], self.provenance)
 
         artifact.save(fp)
 
@@ -129,7 +133,8 @@ class TestArtifact(unittest.TestCase):
             self.assertEqual(fps, expected)
 
     def test_load(self):
-        saved_artifact = Artifact._from_view([-1, 42, 0, 43], FourInts, None)
+        saved_artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                             typing.List[int], None)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         saved_artifact.save(fp)
 
@@ -138,12 +143,12 @@ class TestArtifact(unittest.TestCase):
         self.assertEqual(artifact.type, FourInts)
         self.assertIsNone(artifact.provenance)
         self.assertEqual(artifact.uuid, saved_artifact.uuid)
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
 
     def test_load_with_provenance(self):
-        saved_artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                             self.provenance)
+        saved_artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                             typing.List[int], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         saved_artifact.save(fp)
 
@@ -152,12 +157,13 @@ class TestArtifact(unittest.TestCase):
         self.assertEqual(artifact.type, FourInts)
         self.assertEqual(artifact.provenance, self.provenance)
         self.assertEqual(artifact.uuid, saved_artifact.uuid)
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
 
     def test_load_different_type_with_multiple_view_types(self):
-        saved_artifact = Artifact._from_view([42, 42, 43, -999, 42],
-                                             IntSequence1, None)
+        saved_artifact = Artifact._from_view(IntSequence1,
+                                             [42, 42, 43, -999, 42],
+                                             typing.List[int], None)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         saved_artifact.save(fp)
 
@@ -167,8 +173,10 @@ class TestArtifact(unittest.TestCase):
         self.assertIsNone(artifact.provenance)
         self.assertEqual(artifact.uuid, saved_artifact.uuid)
 
-        self.assertEqual(artifact.view(list), [42, 42, 43, -999, 42])
-        self.assertEqual(artifact.view(list), [42, 42, 43, -999, 42])
+        self.assertEqual(artifact.view(typing.List[int]),
+                         [42, 42, 43, -999, 42])
+        self.assertEqual(artifact.view(typing.List[int]),
+                         [42, 42, 43, -999, 42])
 
         self.assertEqual(artifact.view(collections.Counter),
                          collections.Counter({42: 3, 43: 1, -999: 1}))
@@ -178,8 +186,8 @@ class TestArtifact(unittest.TestCase):
     def test_load_and_save(self):
         fp1 = os.path.join(self.test_dir.name, 'artifact1.qza')
         fp2 = os.path.join(self.test_dir.name, 'artifact2.qza')
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], self.provenance)
         artifact.save(fp1)
 
         artifact = Artifact.load(fp1)
@@ -217,8 +225,9 @@ class TestArtifact(unittest.TestCase):
     def test_roundtrip(self):
         fp1 = os.path.join(self.test_dir.name, 'artifact1.qza')
         fp2 = os.path.join(self.test_dir.name, 'artifact2.qza')
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], self.provenance)
+
         artifact.save(fp1)
 
         artifact1 = Artifact.load(fp1)
@@ -228,8 +237,10 @@ class TestArtifact(unittest.TestCase):
         self.assertEqual(artifact1.type, artifact2.type)
         self.assertEqual(artifact1.provenance, artifact2.provenance)
         self.assertEqual(artifact1.uuid, artifact2.uuid)
-        self.assertEqual(artifact1.view(list), artifact2.view(list))
-        self.assertEqual(artifact1.view(list), artifact2.view(list))
+        self.assertEqual(artifact1.view(typing.List[int]),
+                         artifact2.view(typing.List[int]))
+        self.assertEqual(artifact1.view(typing.List[int]),
+                         artifact2.view(typing.List[int]))
 
     def test_load_from_externally_created_zipfile(self):
         # If a user unzips a .qza to inspect contents and rezips using a
@@ -280,8 +291,8 @@ class TestArtifact(unittest.TestCase):
         self.assertEqual(artifact.type, FourInts)
         self.assertEqual(artifact.provenance, self.provenance)
         self.assertIsInstance(artifact.uuid, uuid.UUID)
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
-        self.assertEqual(artifact.view(list), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
+        self.assertEqual(artifact.view(typing.List[int]), [-1, 42, 0, 43])
 
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
@@ -303,7 +314,8 @@ class TestArtifact(unittest.TestCase):
     def test_load_with_archive_filepath_modified(self):
         # Save an artifact for use in the following test case.
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
-        Artifact._from_view([-1, 42, 0, 43], FourInts, None).save(fp)
+        Artifact._from_view(FourInts, [-1, 42, 0, 43], typing.List[int],
+                            None).save(fp)
 
         # Load the artifact from a filepath then save a different artifact to
         # the same filepath. Assert that both artifacts produce the correct
@@ -320,16 +332,17 @@ class TestArtifact(unittest.TestCase):
         # without extracting/copying data, so that API is now provided through
         # Artifact.peek.
         artifact1 = Artifact.load(fp)
-        Artifact._from_view([10, 11, 12, 13], FourInts, None).save(fp)
+        Artifact._from_view(FourInts, [10, 11, 12, 13], typing.List[int],
+                            None).save(fp)
         artifact2 = Artifact.load(fp)
 
-        self.assertEqual(artifact1.view(list), [-1, 42, 0, 43])
-        self.assertEqual(artifact2.view(list), [10, 11, 12, 13])
+        self.assertEqual(artifact1.view(typing.List[int]), [-1, 42, 0, 43])
+        self.assertEqual(artifact2.view(typing.List[int]), [10, 11, 12, 13])
 
     def test_extract(self):
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
-        artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
-                                       self.provenance)
+        artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43],
+                                       typing.List[int], self.provenance)
         artifact.save(fp)
 
         output_dir = os.path.join(self.test_dir.name, 'artifact-extract-test')
@@ -350,7 +363,8 @@ class TestArtifact(unittest.TestCase):
                             'File %s was not extracted.' % fp)
 
     def test_peek(self):
-        artifact = Artifact._from_view([0, 0, 42, 1000], FourInts, None)
+        artifact = Artifact._from_view(FourInts, [0, 0, 42, 1000],
+                                       typing.List[int], None)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
 
@@ -362,8 +376,8 @@ class TestArtifact(unittest.TestCase):
         self.assertEqual(metadata.uuid, artifact.uuid)
 
     def test_peek_with_provenance(self):
-        artifact = Artifact._from_view({'foo': 'bar', 'baz': 'bazz'}, Mapping,
-                                       self.provenance)
+        artifact = Artifact._from_view(Mapping, {'foo': 'bar', 'baz': 'bazz'},
+                                       typing.Dict[str, str], self.provenance)
         fp = os.path.join(self.test_dir.name, 'artifact.qza')
         artifact.save(fp)
 

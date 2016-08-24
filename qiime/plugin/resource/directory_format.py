@@ -5,8 +5,16 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-import qiime.core.transform as transform
-import qiime.core.path as path
+
+import os
+import re
+
+from qiime.core import transform
+from qiime.core import path
+
+
+class ValidationError(Exception):
+    pass
 
 
 class PathMakerDescriptor:
@@ -81,7 +89,7 @@ class BoundFile:
 
         transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)
-        result.move(self._path_maker(**kwargs))
+        result.move(self._path_maker(self, **kwargs))
 
     @property
     def path_maker(self):
@@ -126,32 +134,10 @@ class DirectoryFormat(metaclass=_DirectoryMeta):
     def __init__(self, path=None, mode='w'):
         if path is None:
             self._backing_path = path.OutPath(
-                dir=True, prefix='q2-%r' % self.__class__.__name__)
+                dir=True,
+                prefix='q2-%s-' % self.__class__.__name__
+            )
         else:
             self._backing_path = path
         self.path = str(self._backing_path)
         self._mode = mode
-
-
-# BEGIN TODO: Drop these examples when done playing
-# class ExampleDirectoryFormat(resource.DirectoryFormat):
-#     something = resource.FileCollection("[0-9]*\.fastq",
-#                                         format=FASTQFileFormat)
-#     other = resource.File('example.txt', format=ExampleFormat)
-#
-#     def __init__(self):
-#         self._curr_id = 0
-#
-#     @something.set_path_maker
-#     def something_path_maker(self, something):
-#         path = "%d.fastq" % self._curr_id
-#         self._curr_id += 1
-#         return path
-#
-#
-# class ExampleFormat(resource.FileFormat):
-#     def sniff(file):
-#         return True
-#
-# dirfmt.something.view(List[skbio.DNA])
-# END TODO

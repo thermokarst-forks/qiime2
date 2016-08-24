@@ -11,7 +11,7 @@ import pkg_resources
 
 import qiime.sdk
 import qiime.core.type.grammar as grammar
-from qiime.plugin.resource import DirectoryFormat
+from .resource import DirectoryFormat
 from qiime.core.type import is_semantic_type
 
 
@@ -88,7 +88,7 @@ class Plugin:
             semantic_type=semantic_type, plugin=self)
 
     def register_semantic_type_to_format(self, semantic_type, artifact_format):
-        if not issubclass(artifact_format, resource.DirectoryFormat):
+        if not issubclass(artifact_format, DirectoryFormat):
             raise TypeError("%r is not a directory format." % artifact_format)
         if not is_semantic_type(semantic_type):
             raise TypeError("%r is not a semantic type." % semantic_type)
@@ -99,9 +99,9 @@ class Plugin:
             raise ValueError("%r has a predicate, differentiating format on"
                              " predicate is not supported.")
 
-         self.type_formats.append(TypeFormatRecord(
-            type_expression=semantic_type, format=artifact_format,
-            plugin=self))
+        self.type_formats.append(TypeFormatRecord(
+            type_expression=semantic_type,
+            format=artifact_format, plugin=self))
 
 
 class PluginMethods(dict):

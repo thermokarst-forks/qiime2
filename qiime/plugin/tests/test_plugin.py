@@ -6,14 +6,11 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
 import unittest
 
 import qiime.plugin
 import qiime.sdk
 
-from qiime.core.testing.type import (IntSequence1, IntSequence2, Mapping,
-                                     FourInts)
 from qiime.core.testing.util import get_dummy_plugin
 
 
@@ -79,13 +76,15 @@ class TestPlugin(unittest.TestCase):
         for viz in visualizers.values():
             self.assertIsInstance(viz, qiime.sdk.Visualizer)
 
+    def test_directory_formats(self):
+        pass
+
     def test_types(self):
-        types = self.plugin.types
+        types = self.plugin.types.keys()
 
         self.assertEqual(
-            types,
-            {'IntSequence1': IntSequence1, 'IntSequence2': IntSequence2,
-             'Mapping': Mapping, 'FourInts': FourInts})
+            set(types),
+            set(['IntSequence1', 'IntSequence2', 'Mapping', 'FourInts']))
 
 
 if __name__ == '__main__':

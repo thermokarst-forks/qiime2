@@ -115,7 +115,7 @@ class TestVisualization(unittest.TestCase):
         visualization = Visualization.load(fp)
 
         self.assertEqual(visualization.type, qiime.core.type.Visualization)
-        self.assertIsNone(visualization.provenance)
+        self.assertEqual(visualization.provenance, 'Visualization')
         self.assertEqual(visualization.uuid, saved_visualization.uuid)
 
     def test_load_with_provenance(self):
@@ -392,7 +392,7 @@ class TestVisualization(unittest.TestCase):
 
         self.assertIsInstance(metadata, ResultMetadata)
         self.assertEqual(metadata.type, qiime.core.type.Visualization)
-        self.assertIsNone(metadata.provenance)
+        self.assertIsEqual(metadata.provenance, 'Visualization')
         self.assertEqual(metadata.uuid, visualization.uuid)
 
     def test_peek_with_provenance(self):

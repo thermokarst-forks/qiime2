@@ -16,7 +16,7 @@ import decorator
 
 import qiime.sdk
 import qiime.core.type as qtype
-from qiime.core.path import TempPath
+import qiime.core.path as path
 
 
 # Descriptor protocol for methods with dynamic signatures built from the
@@ -219,7 +219,7 @@ class Visualizer:
                 parameter_references)
 
             # TODO use user-configured temp dir
-            with TempPath(dir=True) as temp_dir:
+            with path.OutPath(dir=True) as temp_dir:
                 ret_val = self._callable(output_dir=str(temp_dir), **view_args)
                 if ret_val is not None:
                     raise TypeError(

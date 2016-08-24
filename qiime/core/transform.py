@@ -13,16 +13,21 @@ def identity(x):
     return x
 
 
+from qiime import sdk
+from qiime.plugin import resource
+from qiime.core import path
+
+
 class ResourcePattern:
     @staticmethod
     def from_view_type(view_type):
-        if isinstance(view_type, (path.InPath, path.OutPath)):
-            return PathResource(view_type)
-        elif isinstance(view_type, (resource.FileFormat,
-                                    resource.DirectoryFormat)):
-            return FormatResource(view_type)
-        else:
-            return ObjectResource(view_type)
+            if isinstance(view_type, (path.InPath, path.OutPath)):
+                return PathResource(view_type)
+            elif isinstance(view_type, (resource.file_format._FileFormat,
+                                        resource.DirectoryFormat)):
+                return FormatResource(view_type)
+            else:
+                return ObjectResource(view_type)
 
     def __init__(self, view_type):
         self._pm = sdk.PluginManager()

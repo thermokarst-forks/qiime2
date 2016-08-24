@@ -6,16 +6,18 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import collections
-
 import qiime
 import qiime.plugin
-from qiime.plugin.resource import DirectoryFormat
 
+from .format import (
+    IntSequenceDirectoryFormat,
+    MappingDirectoryFormat,
+    FourIntsDirectoryFormat,
+)
+from .transformer import _1, _2, _3, _4, _5, _6, _7, _8, _9
 from .type import IntSequence1, IntSequence2, Mapping, FourInts
 from .method import concatenate_ints, split_ints, merge_mappings
 from .visualizer import most_common_viz, mapping_viz
-
 
 dummy_plugin = qiime.plugin.Plugin(
     name='dummy-plugin',
@@ -26,14 +28,39 @@ dummy_plugin = qiime.plugin.Plugin(
     user_support_text='For help, see http://2.qiime.org'
 )
 
-dummy_plugin.register_semantic_type(IntSequence1,
-                                    artifact_format=DirectoryFormat)
-dummy_plugin.register_semantic_type(IntSequence2,
-                                    artifact_format=DirectoryFormat)
-dummy_plugin.register_semantic_type(Mapping,
-                                    artifact_format=DirectoryFormat)
-dummy_plugin.register_semantic_type(FourInts,
-                                    artifact_format=DirectoryFormat)
+# Register semantic types
+dummy_plugin.register_semantic_type(IntSequence1)
+dummy_plugin.register_semantic_type(IntSequence2)
+dummy_plugin.register_semantic_type(Mapping)
+dummy_plugin.register_semantic_type(FourInts)
+
+# TODO: redo as decorators
+dummy_plugin.register_transformer(_1)
+dummy_plugin.register_transformer(_2)
+dummy_plugin.register_transformer(_3)
+dummy_plugin.register_transformer(_4)
+dummy_plugin.register_transformer(_5)
+dummy_plugin.register_transformer(_6)
+dummy_plugin.register_transformer(_7)
+dummy_plugin.register_transformer(_8)
+dummy_plugin.register_transformer(_9)
+
+dummy_plugin.register_semantic_type_to_format(
+    IntSequence1,
+    artifact_format=IntSequenceDirectoryFormat
+)
+dummy_plugin.register_semantic_type_to_format(
+    IntSequence2,
+    artifact_format=IntSequenceDirectoryFormat
+)
+dummy_plugin.register_semantic_type_to_format(
+    Mapping,
+    artifact_format=MappingDirectoryFormat
+)
+dummy_plugin.register_semantic_type_to_format(
+    FourInts,
+    artifact_format=FourIntsDirectoryFormat
+)
 
 # TODO add an optional parameter to this method when they are supported
 dummy_plugin.methods.register_markdown('markdown/concatenate_ints_markdown.md')

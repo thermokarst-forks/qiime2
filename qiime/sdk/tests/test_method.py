@@ -12,6 +12,7 @@ import inspect
 import pkg_resources
 import unittest
 import uuid
+import typing
 
 import qiime.plugin
 from qiime.core.type import Signature
@@ -210,8 +211,10 @@ class TestMethod(unittest.TestCase):
         concatenate_ints_markdown = \
             self.plugin.methods['concatenate_ints_markdown']
 
-        artifact1 = Artifact._from_view([0, 42, 43], IntSequence1, None)
-        artifact2 = Artifact._from_view([99, -22], IntSequence2, None)
+        artifact1 = Artifact._from_view(IntSequence1, [0, 42, 43],
+                                        typing.List[int], None)
+        artifact2 = Artifact._from_view(IntSequence2, [99, -22],
+                                        typing.List[int], None)
 
         for method in concatenate_ints, concatenate_ints_markdown:
             result = method(artifact1, artifact1, artifact2, 55, 1)
@@ -238,8 +241,8 @@ class TestMethod(unittest.TestCase):
 
             # Can retrieve multiple views of different type.
             exp_list_view = [0, 42, 43, 0, 42, 43, 99, -22, 55, 1]
-            self.assertEqual(result.view(list), exp_list_view)
-            self.assertEqual(result.view(list), exp_list_view)
+            self.assertEqual(result.view(typing.List[int]), exp_list_view)
+            self.assertEqual(result.view(typing.List[int]), exp_list_view)
 
             exp_counter_view = collections.Counter(
                 {0: 2, 42: 2, 43: 2, 99: 1, -22: 1, 55: 1, 1: 1})
@@ -249,18 +252,20 @@ class TestMethod(unittest.TestCase):
                              exp_counter_view)
 
             # Accepts IntSequence1 | IntSequence2
-            artifact3 = Artifact._from_view([10, 20], IntSequence2, None)
+            artifact3 = Artifact._from_view(IntSequence2, [10, 20],
+                                            typing.List[int], None)
             result = method(artifact3, artifact1, artifact2, 55, 1)
 
             self.assertEqual(result.type, IntSequence1)
-            self.assertEqual(result.view(list),
+            self.assertEqual(result.view(typing.List[int]),
                              [10, 20, 0, 42, 43, 99, -22, 55, 1])
 
     def test_call_with_multiple_outputs(self):
         split_ints = self.plugin.methods['split_ints']
         split_ints_markdown = self.plugin.methods['split_ints_markdown']
 
-        artifact = Artifact._from_view([0, 42, -2, 43, 6], IntSequence1, None)
+        artifact = Artifact._from_view(IntSequence1, [0, 42, -2, 43, 6],
+                                       typing.List[int], None)
 
         for method in split_ints, split_ints_markdown:
             result = method(artifact)
@@ -289,15 +294,16 @@ class TestMethod(unittest.TestCase):
             # Output artifacts have different UUIDs.
             self.assertNotEqual(result[0].uuid, result[1].uuid)
 
-            self.assertEqual(result[0].view(list), [0, 42])
-            self.assertEqual(result[1].view(list), [-2, 43, 6])
+            self.assertEqual(result[0].view(typing.List[int]), [0, 42])
+            self.assertEqual(result[1].view(typing.List[int]), [-2, 43, 6])
 
     def test_call_with_no_parameters(self):
         merge_mappings = self.plugin.methods['merge_mappings']
 
-        artifact1 = Artifact._from_view({'foo': 'abc', 'bar': 'def'}, Mapping,
-                                        None)
-        artifact2 = Artifact._from_view({'bazz': 'abc'}, Mapping, None)
+        artifact1 = Artifact._from_view(Mapping, {'foo': 'abc', 'bar': 'def'},
+                                        typing.Dict[str, str], None)
+        artifact2 = Artifact._from_view(Mapping, {'bazz': 'abc'},
+                                        typing.Dict[str, str], None)
 
         result = merge_mappings(artifact1, artifact2)
 
@@ -317,7 +323,7 @@ class TestMethod(unittest.TestCase):
 
         self.assertIsInstance(result.uuid, uuid.UUID)
 
-        self.assertEqual(result.view(dict),
+        self.assertEqual(result.view(typing.Dict[str, str]),
                          {'foo': 'abc', 'bar': 'def', 'bazz': 'abc'})
 
     def test_async(self):
@@ -325,8 +331,10 @@ class TestMethod(unittest.TestCase):
         concatenate_ints_markdown = \
             self.plugin.methods['concatenate_ints_markdown']
 
-        artifact1 = Artifact._from_view([0, 42, 43], IntSequence1, None)
-        artifact2 = Artifact._from_view([99, -22], IntSequence2, None)
+        artifact1 = Artifact._from_view(IntSequence1, [0, 42, 43],
+                                        typing.List[int], None)
+        artifact2 = Artifact._from_view(IntSequence2, [99, -22],
+                                        typing.List[int], None)
 
         for method in concatenate_ints, concatenate_ints_markdown:
             future = method.async(artifact1, artifact1, artifact2, 55, 1)
@@ -356,8 +364,8 @@ class TestMethod(unittest.TestCase):
 
             # Can retrieve multiple views of different type.
             exp_list_view = [0, 42, 43, 0, 42, 43, 99, -22, 55, 1]
-            self.assertEqual(result.view(list), exp_list_view)
-            self.assertEqual(result.view(list), exp_list_view)
+            self.assertEqual(result.view(typing.List[int]), exp_list_view)
+            self.assertEqual(result.view(typing.List[int]), exp_list_view)
 
             exp_counter_view = collections.Counter(
                 {0: 2, 42: 2, 43: 2, 99: 1, -22: 1, 55: 1, 1: 1})
@@ -372,7 +380,7 @@ class TestMethod(unittest.TestCase):
             result = future.result()
 
             self.assertEqual(result.type, IntSequence1)
-            self.assertEqual(result.view(list),
+            self.assertEqual(result.view(typing.List[int]),
                              [10, 20, 0, 42, 43, 99, -22, 55, 1])
 
     def test_markdown_input_section_validation(self):
