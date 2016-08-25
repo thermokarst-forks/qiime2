@@ -16,9 +16,11 @@ from qiime.core.type import is_semantic_type
 
 
 TransformerRecord = collections.namedtuple(
-    'TransformerRecord', ['transformer', 'plugin'])
+    'TransformerRecord', ['transformer', 'restrict', 'plugin'])
 SemanticTypeRecord = collections.namedtuple(
-    'SemanticTypeRecord', ['semantic_type', 'artifact_format', 'plugin'])
+    'SemanticTypeRecord', ['semantic_type', 'plugin'])
+TypeFormatRecord = collections.namedtuple(
+    'TypeFormatRecord', ['type_expression', 'format', 'plugin'])
 
 
 class Plugin:
@@ -45,26 +47,31 @@ class Plugin:
 
         self.types = {}
         self.transformers = {}
+        self.type_formats = []
 
-    def register_transformer(self, transformer):
+    def register_transformer(self, _fn=None, *, restrict=None):
         """
         A transformer has the type Callable[[type], type]
         """
-        annotations = transformer.__annotations__.copy()
-        if len(annotations) != 2:
-            raise TypeError()
-        if type(annotations['return']) is tuple:
-            raise TypeError()
-        output = annotations.pop('return')
-        input = list(annotations.values())[0]
+        def decorator(transformer):
+            annotations = transformer.__annotations__.copy()
+            if len(annotations) != 2:
+                raise TypeError()
+            if type(annotations['return']) is tuple:
+                raise TypeError()
+            output = annotations.pop('return')
+            input = list(annotations.values())[0]
 
-        self.transformers[input, output] = TransformerRecord(
-            transformer=transformer, plugin=self)
+            self.transformers[input, output] = TransformerRecord(
+                transformer=transformer, restrict=restrict, plugin=self)
+            return None
 
-    def register_semantic_type(self, semantic_type, artifact_format):
-        if not issubclass(artifact_format, DirectoryFormat):
-            raise TypeError("%r is not a directory format." % artifact_format)
+        if _fn is None:
+            return decorator
+        else:
+            return decorator(_fn)
 
+    def register_semantic_type(self, semantic_type):
         if not is_semantic_type(semantic_type):
             raise TypeError("%r is not a semantic type." % semantic_type)
 
@@ -78,8 +85,23 @@ class Plugin:
                              % semantic_type)
 
         self.types[semantic_type.name] = SemanticTypeRecord(
-            semantic_type=semantic_type, artifact_format=artifact_format,
-            plugin=self)
+            semantic_type=semantic_type, plugin=self)
+
+    def register_semantic_type_to_format(self, semantic_type, artifact_format):
+        if not issubclass(artifact_format, resource.DirectoryFormat):
+            raise TypeError("%r is not a directory format." % artifact_format)
+        if not is_semantic_type(semantic_type):
+            raise TypeError("%r is not a semantic type." % semantic_type)
+        if not isinstance(semantic_type, grammar.TypeExpression):
+            raise ValueError("%r is not a semantic type expression."
+                             % semantic_type)
+        if semantic_type.predicate is not None:
+            raise ValueError("%r has a predicate, differentiating format on"
+                             " predicate is not supported.")
+
+         self.type_formats.append(TypeFormatRecord(
+            type_expression=semantic_type, format=artifact_format,
+            plugin=self))
 
 
 class PluginMethods(dict):

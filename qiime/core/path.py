@@ -16,7 +16,14 @@ T = typing.TypeVar('T')
 _ConcretePath = type(pathlib.Path())
 
 
-class TempPath(_ConcretePath, typing.Generic[T]):
+class InPath(_ConcretePath, typing.Generic[T]):
+    @classmethod
+    def validate_view_type(cls):
+        return isinstance(
+            cls.__args__[0], (resource.FileFormat, resource.DirectoryFormat))
+
+
+class OutPath(InPath):
     def __new__(cls, dir=False, **kwargs):
         """
         Create a tempfile, return pathlib.Path reference to it.

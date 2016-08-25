@@ -18,7 +18,8 @@ import qiime.sdk
 import qiime.core.archiver as archiver
 import qiime.core.type
 import qiime.core.util
-import qiime.core.viewlib as viewlib
+import qiime.core.transform as transform
+import qiime.core.path as path
 
 # Note: Result, Artifact, and Visualization classes are in this file to avoid
 # circular dependencies between Result and its subclasses. Result is tightly
@@ -28,7 +29,8 @@ import qiime.core.viewlib as viewlib
 
 
 ResultMetadata = collections.namedtuple('ResultMetadata',
-                                        ['uuid', 'type', 'provenance', 'data'])
+                                        ['uuid', 'type', 'format',
+                                         'provenance'])
 
 
 class Result:
@@ -47,12 +49,13 @@ class Result:
 
     @classmethod
     def peek(cls, filepath):
-        uuid, type, provenance, _ = archiver.Archiver.peek(filepath)
+        uuid, type, format, provenance = archiver.Archiver.peek(filepath)
         if not cls._is_valid_type(type):
             raise TypeError(
                 "Cannot peek at filepath %r because %s does not support type "
                 "%r." % (filepath, cls.__name__, type))
-        return ResultMetadata(uuid=uuid, type=type, provenance=provenance)
+        return ResultMetadata(uuid=uuid, type=type, format=format,
+                              provenance=provenance)
 
     @classmethod
     def load(cls, filepath):
@@ -96,6 +99,12 @@ class Result:
     @property
     def uuid(self):
         return self._archiver.uuid
+
+    @property
+    def format(self):
+        if not hasattr(self, '__format'):
+            self.__format = util.parse_format(self._archiver.format)
+        return self.__format
 
     def __init__(self):
         raise NotImplementedError(
@@ -154,23 +163,24 @@ class Artifact(Result):
 
         # TODO: validate view w.r.t. view_type
 
-        input_pattern = viewlib.interpreter(view_type)
-        output_pattern = viewlib.interpreter(output_dir_fmt)
+        from_pattern = transform.ResourcePattern.from_view_type(view_type)
+        to_pattern = transform.ResourcePattern.from_view_type(output_dir_fmt)
 
-        transformation = input_pattern.make_transformation(output_pattern)
-
+        transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)
 
         artifact = cls.__new__(cls)
         artifact._archiver = archiver.Archiver(
-            uuid.uuid4(), type, provenance, data_initializer=result.move)
+            uuid.uuid4(), type, provenance, output_dir_format.__name__,
+            data_initializer=result.move)
         return artifact
 
     def view(self, view_type):
-        pm = qiime.sdk.PluginManager()
-        data_layout = pm.get_data_layout(self.type)
-        reader = data_layout.readers[view_type]
-        return self._archiver.load_data(reader)
+        from_pattern = transform.ResourcePattern.from_view_type(
+            path.InPath[self.format])
+        to_pattern =  transform.ResourcePattern.from_view_type(view_type)
+        transformation = from_pattern.make_transformation(to_pattern)
+        return self._archiver.load_data(transformation)
 
     def save(self, filepath):
         if not filepath.endswith(self.extension):
@@ -198,7 +208,7 @@ class Visualization(Result):
         viz = cls.__new__(cls)
         viz._archiver = archiver.Archiver(
             uuid.uuid4(), qiime.core.type.Visualization, provenance,
-            data_initializer=data_initializer)
+            'Visualization', data_initializer=data_initializer)
         return viz
 
     def get_index_paths(self, relative=True):

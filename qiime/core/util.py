@@ -97,6 +97,14 @@ class UnknownTypeError(TypeError):
     pass
 
 
+def parse_format(format_str):
+    pm = qiime.sdk.PluginManager()
+    for type_format_record in pm.type_formats:
+        if type_format_record.format.__name__ == format_str:
+            return type_format_record.format
+    raise TypeError()
+
+
 @contextlib.contextmanager
 def warning():
     def _warnformat(msg, category, filename, lineno, file=None, line=None):

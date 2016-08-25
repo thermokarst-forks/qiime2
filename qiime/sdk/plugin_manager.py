@@ -29,6 +29,7 @@ class PluginManager:
         self.plugins = {}
         self.semantic_types = {}
         self.transformers = collections.defaultdict(dict)
+        self.type_formats = []
 
         plugins = []
         for entry_point in pkg_resources.iter_entry_points(
@@ -61,6 +62,8 @@ class PluginManager:
                                  % transformation)
             self.transformers[input][output] = transformer_record
 
+        self.type_formats.extend(plugin.type_formats)
+
     # TODO: Should plugin loading be transactional? i.e. if there's
     # something wrong, the entire plugin fails to load any piece, like a
     # databases rollback/commit
@@ -72,9 +75,9 @@ class PluginManager:
                 "Must provide a semantic type via `type`, not %r" % type)
 
         dir_fmt = None
-        for semantic_type_record in self.semantic_type.values():
-            if semantic_type <= semantic_type_record.semantic_type:
-                dir_fmt = semantic_type_record.artifact_format
+        for type_format_record in self.type_formats:
+            if semantic_type <= type_format_record.type_expression:
+                dir_fmt = type_format_record.format
                 break
 
         if dir_fmt is None:

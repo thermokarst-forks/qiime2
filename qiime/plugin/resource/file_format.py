@@ -11,28 +11,22 @@ import io
 import shutil
 
 
-class FileFormat(metaclass=abc.ABCMeta):
+class _FileFormat(metaclass=abc.ABCMeta):
     def __init__(self, path=None, mode='w'):
         if path is None:
-            self._path = TempPath(prefix='q2-%r' % self.__class__.__name__)
+            self._path = path.OutPath(
+                prefix='q2-%r' % self.__class__.__name__)
         else:
             self._path = path
         self.path = str(self._path)
-        self.mode = mode
-
-    def move(self, dst):
-        """Matches shutil.move"""
-        if not os.path.isfile(self.path):
-            raise IOError("%r is not bound to a file." % self)
-        shutil.move(self.path, dst)
-        self.path = dst
+        self._mode = mode
 
 
-class TextFileFormat(FileFormat):
+class TextFileFormat(_FileFormat):
     def open(self):
-        return io.open(self.path, mode=self.mode, encoding='utf8')
+        return io.open(self.path, mode=self._mode, encoding='utf8')
 
 
-class BinaryFileFormat(FileFormat):
+class BinaryFileFormat(_FileFormat):
     def open(self):
-        return io.open(self.path, mode=self.mode+'b')
+        return io.open(self.path, mode=self._mode+'b')

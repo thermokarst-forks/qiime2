@@ -5,7 +5,8 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-import qiime.core.viewlib as viewlib
+import qiime.core.transform as transform
+import qiime.core.path as path
 
 
 class PathMakerDescriptor:
@@ -65,17 +66,20 @@ class BoundFile:
                                                 self.pathspec)
 
     def view(self, view_type):
-        self_pattern = viewlib.interpreter(FilePath[self.format])
-        resource_pattern = viewlib.interpreter(view_type)
-        transformation = self_pattern.make_transformation(resource_pattern)
+        from_pattern = transform.ResourcePattern.from_view_type(
+            path.InPath[self.format])
+        to_pattern = transform.ResourcePattern.from_view_type(view_type)
+
+        transformation = from_pattern.make_transformation(to_pattern)
         return transformation(self._path_maker())
 
     def set(self, view, view_type, **kwargs):
         if self.mode != 'w':
             raise TypeError("Cannot use `set`/`add` when mode=%r" % self.mode)
-        resource_pattern = ResourcePattern.from_type(view_type)
-        self_pattern = viewlib.interpreter(self.format)
-        transformation = resource_pattern.make_transformation(self_pattern)
+        from_pattern = transform.ResourcePattern.from_view_type(view_type)
+        to_pattern = transform.ResourcePattern.from_view_type(self.format)
+
+        transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)
         result.move(self._path_maker(**kwargs))
 
@@ -95,14 +99,16 @@ class BoundFileCollection(BoundFile):
         root = self._directory_format.path
         paths = [os.path.join(root, fp) for fp in os.listdir(root)
                  if re.match(self.pathspec, fp)]
-        self_pattern = viewlib.interpreter(FilePath[self.format])
-        resource_pattern = viewlib.interpreter(view_type)
-        transformation = self_pattern.make_transformation(resource_pattern)
+        from_pattern = transform.ResourcePattern.from_view_type(
+            path.InPath[self.format])
+        to_pattern = transform.ResourcePattern.from_view_type(view_type)
+
+        transformation = from_pattern.make_transformation(to_pattern)
         for fp in paths:
             yield transformation(fp)
 
     def set(self, view, view_type, **kwargs):
-        raise TypeError("Cannot set an entire file collection.")
+        raise TypeError("Cannot set an entire file collection, use `add`.")
 
     def add(self, view, view_type, **kwargs):
         super().set(view, view_type, **kwargs)
@@ -117,22 +123,14 @@ class _DirectoryMeta(type):
 
 
 class DirectoryFormat(metaclass=_DirectoryMeta):
-    def move(self, dst):
-        """Matches shutil.move"""
-        if not os.path.isdir(self.path):
-            raise IOError("%r is not bound to a file." % self)
-        shutil.move(self.path, dst)
-        self.path = dst
-
-
     def __init__(self, path=None, mode='w'):
         if path is None:
-            self._path = tempfile.mkstemp(
+            self._path = path.OutPath(
                 dir=True, prefix='q2-%r' % self.__class__.__name__)
         else:
             self._path = path
         self.path = str(self._path)
-        self.mode = mode
+        self._mode = mode
 
 
 # BEGIN TODO: Drop these examples when done playing
