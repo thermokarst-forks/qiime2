@@ -14,11 +14,11 @@ import shutil
 class _FileFormat(metaclass=abc.ABCMeta):
     def __init__(self, path=None, mode='w'):
         if path is None:
-            self._path = path.OutPath(
+            self._backing_path = path.OutPath(
                 prefix='q2-%r' % self.__class__.__name__)
         else:
-            self._path = path
-        self.path = str(self._path)
+            self._backing_path = path
+        self.path = str(self._backing_path)
         self._mode = mode
 
 

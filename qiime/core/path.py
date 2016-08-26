@@ -17,10 +17,9 @@ _ConcretePath = type(pathlib.Path())
 
 
 class InPath(_ConcretePath, typing.Generic[T]):
-    @classmethod
-    def validate_view_type(cls):
-        return isinstance(
-            cls.__args__[0], (resource.FileFormat, resource.DirectoryFormat))
+    def __new__(cls, path):
+        self = super().__new__(cls, path)
+        self._backing_path = path
 
 
 class OutPath(InPath):

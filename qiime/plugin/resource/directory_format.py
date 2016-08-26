@@ -39,7 +39,7 @@ class FileCollection(File):
 
     def set_path_maker(self, function):
         self._path_maker = function
-        return PathMakerDescriptor(self)
+            return PathMakerDescriptor(self)
 
     def __get__(self, obj, cls=None):
         if obj is None:
@@ -125,11 +125,11 @@ class _DirectoryMeta(type):
 class DirectoryFormat(metaclass=_DirectoryMeta):
     def __init__(self, path=None, mode='w'):
         if path is None:
-            self._path = path.OutPath(
+            self._backing_path = path.OutPath(
                 dir=True, prefix='q2-%r' % self.__class__.__name__)
         else:
-            self._path = path
-        self.path = str(self._path)
+            self._backing_path = path
+        self.path = str(self._backing_path)
         self._mode = mode
 
 
