@@ -10,13 +10,13 @@ import qiime.core.path as path
 
 
 class PathMakerDescriptor:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, file):
+        self.file = file
 
     def __get__(self, obj, cls=None):
         if obj is None:
             raise Exception()
-        return getattr(obj, self.name).path_maker
+        return getattr(obj, self.file.name).path_maker
 
 
 class File:
@@ -39,7 +39,7 @@ class FileCollection(File):
 
     def set_path_maker(self, function):
         self._path_maker = function
-        return PathMakerDescriptor(self.name)
+        return PathMakerDescriptor(self)
 
     def __get__(self, obj, cls=None):
         if obj is None:
@@ -86,7 +86,7 @@ class BoundFile:
     @property
     def path_maker(self):
         def bound_path_maker(**kwargs):
-            return self._path_maker(self._directory_format, self, **kwargs)
+            return self._path_maker(self._directory_format, **kwargs)
         return bound_path_maker
 
 
