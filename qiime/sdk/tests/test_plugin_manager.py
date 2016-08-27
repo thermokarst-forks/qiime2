@@ -21,10 +21,8 @@ from qiime.core.testing.util import get_dummy_plugin
 # the dummy plugin.
 class TestPluginManager(unittest.TestCase):
     def setUp(self):
-        # Ignore the returned dummy plugin object, just run this to verify the
-        # plugin exists as the tests rely on it being loaded. PluginManager is
-        # a singleton so there's no issue creating it again.
-        get_dummy_plugin()
+        self.plugin = get_dummy_plugin()
+        # PluginManager is a singleton so there's no issue creating it again.
         self.pm = qiime.sdk.PluginManager()
 
     def test_plugins(self):
@@ -35,10 +33,18 @@ class TestPluginManager(unittest.TestCase):
     def test_semantic_types(self):
         types = self.pm.semantic_types
 
-        self.assertEqual(types['IntSequence1'], ('dummy-plugin', IntSequence1))
-        self.assertEqual(types['IntSequence2'], ('dummy-plugin', IntSequence2))
-        self.assertEqual(types['Mapping'], ('dummy-plugin', Mapping))
-        self.assertEqual(types['FourInts'], ('dummy-plugin', FourInts))
+        self.assertEqual(types['IntSequence1'].semantic_type, IntSequence1)
+        self.assertEqual(types['IntSequence1'].plugin, self.plugin)
+
+        self.assertEqual(types['IntSequence2'].semantic_type, IntSequence2)
+        self.assertEqual(types['IntSequence2'].plugin, self.plugin)
+
+        self.assertEqual(types['Mapping'].semantic_type, Mapping)
+        self.assertEqual(types['Mapping'].plugin, self.plugin)
+
+        self.assertEqual(types['FourInts'].semantic_type, FourInts)
+        self.assertEqual(types['FourInts'].plugin, self.plugin)
+
 
 if __name__ == '__main__':
     unittest.main()

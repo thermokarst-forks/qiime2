@@ -14,7 +14,7 @@ from .format import (
     MappingDirectoryFormat,
     FourIntsDirectoryFormat,
 )
-from .transformer import _1, _2, _3, _4, _5, _6, _7, _8, _9
+from .transformer import _1, _2, _3, _4, _5, _6, _7
 from .type import IntSequence1, IntSequence2, Mapping, FourInts
 from .method import concatenate_ints, split_ints, merge_mappings
 from .visualizer import most_common_viz, mapping_viz
@@ -42,8 +42,6 @@ dummy_plugin.register_transformer(_4)
 dummy_plugin.register_transformer(_5)
 dummy_plugin.register_transformer(_6)
 dummy_plugin.register_transformer(_7)
-dummy_plugin.register_transformer(_8)
-dummy_plugin.register_transformer(_9)
 
 dummy_plugin.register_semantic_type_to_format(
     IntSequence1,

@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import abc
-import io
+import pathlib
 
 import qiime.core
 
@@ -20,15 +20,15 @@ class _FileFormat(metaclass=abc.ABCMeta):
             )
         else:
             self._backing_path = path
-        self.path = str(self._backing_path)
+        self.path = self._backing_path
         self._mode = mode
 
 
 class TextFileFormat(_FileFormat):
     def open(self):
-        return io.open(self.path, mode=self._mode, encoding='utf8')
+        return self.path.open(mode=self._mode, encoding='utf8')
 
 
 class BinaryFileFormat(_FileFormat):
     def open(self):
-        return io.open(self.path, mode=self._mode+'b')
+        return self.path.open(mode=self._mode+'b')

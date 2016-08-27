@@ -5,17 +5,14 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
-import qiime.core.path as path
-import qiime.plugin.resource as resource
-
-
-def identity(x):
-    return x
-
 
 from qiime import sdk
 from qiime.plugin import resource
 from qiime.core import path
+
+
+def identity(x):
+    return x
 
 
 class ResourcePattern:
@@ -48,7 +45,8 @@ class ResourcePattern:
 
         if has_transformation:
             return transformation
-        raise Exception()
+        raise Exception("No transformation from %s to %s" %
+                        (self._view_type, other._view_type))
 
     def yield_input_coercion(self):
         yield identity, self._view_type

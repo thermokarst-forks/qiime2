@@ -46,23 +46,13 @@ def _4(view: typing.List[int]) -> IntSequenceFormat:
     return outfile
 
 
-# TODO: Drop this once identity case is handled
-def _5(view: IntSequenceDirectoryFormat) -> IntSequenceDirectoryFormat:
-    return view
-
-
-# TODO: Drop this once identity case is handled
-def _6(view: FourIntsDirectoryFormat) -> FourIntsDirectoryFormat:
-    return view
-
-
-def _7(view: typing.Dict[str, str]) -> MappingDirectoryFormat:
+def _5(view: typing.Dict[str, str]) -> MappingDirectoryFormat:
     odm = MappingDirectoryFormat()
     odm.Mapping.set(view, dict)
     return odm
 
 
-def _8(view: typing.Dict[str, str]) -> MappingFormat:
+def _6(view: typing.Dict[str, str]) -> MappingFormat:
     outfile = MappingFormat()
     with outfile.open() as fh:
         for key, value in view.items():
@@ -70,5 +60,5 @@ def _8(view: typing.Dict[str, str]) -> MappingFormat:
     return outfile
 
 
-def _9(df: FourIntsDirectoryFormat) -> typing.List[int]:
+def _7(df: FourIntsDirectoryFormat) -> typing.List[int]:
     return df.single_ints.view(typing.List[int])

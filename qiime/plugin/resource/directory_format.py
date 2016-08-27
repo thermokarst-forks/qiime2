@@ -63,27 +63,26 @@ class FileCollection(File):
 class BoundFile:
     @property
     def mode(self):
-        return self._directory_format.mode
+        return self._directory_format._mode
 
     def __init__(self, name, pathspec, format, directory_format):
         self.name = name
         self.pathspec = pathspec
         self.format = format
         self._directory_format = directory_format
-        self._path_maker = lambda: os.path.join(self._directory_format.path,
-                                                self.pathspec)
+        self._path_maker = lambda: self._directory_format / self.pathspec
 
     def view(self, view_type):
         from_pattern = transform.ResourcePattern.from_view_type(
-            path.InPath[self.format])
+            qpath.InPath[self.format])
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
 
         transformation = from_pattern.make_transformation(to_pattern)
         return transformation(self._path_maker())
 
     def set(self, view, view_type, **kwargs):
-        if self._mode != 'w':
-            raise TypeError("Cannot use `set`/`add` when mode=%r" % self._mode)
+        if self.mode != 'w':
+            raise TypeError("Cannot use `set`/`add` when mode=%r" % self.mode)
         from_pattern = transform.ResourcePattern.from_view_type(view_type)
         to_pattern = transform.ResourcePattern.from_view_type(self.format)
 
@@ -108,7 +107,7 @@ class BoundFileCollection(BoundFile):
         paths = [os.path.join(root, fp) for fp in os.listdir(root)
                  if re.match(self.pathspec, fp)]
         from_pattern = transform.ResourcePattern.from_view_type(
-            path.InPath[self.format])
+            qpath.InPath[self.format])
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
 
         transformation = from_pattern.make_transformation(to_pattern)

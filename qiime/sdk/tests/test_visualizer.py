@@ -238,9 +238,9 @@ class TestVisualizer(unittest.TestCase):
         mapping_viz = self.plugin.visualizers['mapping_viz']
 
         artifact1 = Artifact._from_view(Mapping, {'foo': 'abc', 'bar': 'def'},
-                                        dict, None)
+                                        typing.Dict[str, str], None)
         artifact2 = Artifact._from_view(Mapping, {'baz': 'abc', 'bazz': 'ghi'},
-                                        dict, None)
+                                        typing.Dict[str, str], None)
 
         future = mapping_viz.async(artifact1, artifact2, 'Key', 'Value')
 
