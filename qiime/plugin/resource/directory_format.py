@@ -10,7 +10,7 @@ import os
 import re
 
 from qiime.core import transform
-from qiime.core import path
+from qiime.core import path as qpath
 
 
 class ValidationError(Exception):
@@ -47,7 +47,7 @@ class FileCollection(File):
 
     def set_path_maker(self, function):
         self._path_maker = function
-            return PathMakerDescriptor(self)
+        return PathMakerDescriptor(self)
 
     def __get__(self, obj, cls=None):
         if obj is None:
@@ -82,8 +82,8 @@ class BoundFile:
         return transformation(self._path_maker())
 
     def set(self, view, view_type, **kwargs):
-        if self.mode != 'w':
-            raise TypeError("Cannot use `set`/`add` when mode=%r" % self.mode)
+        if self._mode != 'w':
+            raise TypeError("Cannot use `set`/`add` when mode=%r" % self._mode)
         from_pattern = transform.ResourcePattern.from_view_type(view_type)
         to_pattern = transform.ResourcePattern.from_view_type(self.format)
 
@@ -133,7 +133,7 @@ class _DirectoryMeta(type):
 class DirectoryFormat(metaclass=_DirectoryMeta):
     def __init__(self, path=None, mode='w'):
         if path is None:
-            self._backing_path = path.OutPath(
+            self._backing_path = qpath.OutPath(
                 dir=True,
                 prefix='q2-%s-' % self.__class__.__name__
             )

@@ -208,8 +208,8 @@ class Visualization(Result):
                                              data_dir)
         viz = cls.__new__(cls)
         viz._archiver = archiver.Archiver(
-            uuid.uuid4(), qiime.core.type.Visualization, provenance,
-            'Visualization', data_initializer=data_initializer)
+            uuid.uuid4(), qiime.core.type.Visualization, 'Visualization',
+            provenance, data_initializer=data_initializer)
         return viz
 
     def get_index_paths(self, relative=True):

@@ -20,6 +20,7 @@ class InPath(_ConcretePath, typing.Generic[T]):
     def __new__(cls, path):
         self = super().__new__(cls, path)
         self._backing_path = path
+        return self
 
 
 class OutPath(InPath):

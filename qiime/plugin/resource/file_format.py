@@ -9,11 +9,13 @@
 import abc
 import io
 
+import qiime.core
+
 
 class _FileFormat(metaclass=abc.ABCMeta):
     def __init__(self, path=None, mode='w'):
         if path is None:
-            self._backing_path = path.OutPath(
+            self._backing_path = qiime.core.path.OutPath(
                 prefix='q2-%s-' % self.__class__.__name__
             )
         else:

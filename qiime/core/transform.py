@@ -54,14 +54,14 @@ class ResourcePattern:
         yield identity, self._view_type
 
     def yield_output_coercion(self, view_type):
-        if view_types == self._view_type:
+        if view_type == self._view_type:
             yield identity
 
     def yield_transformers(self, view_type):
         if view_type == self._view_type:
-            yield identity
-        for record in self._pm.transformers[view_type].values()
-            yield record.transformer
+            yield identity, self._view_type
+        for type, record in self._pm.transformers[view_type].items():
+            yield record.transformer, type
 
 
 class PathResource(ResourcePattern):
@@ -88,7 +88,7 @@ class FormatResource(ResourcePattern):
                path.InPath[self._view_type])
 
     def yield_output_coercion(self, view_type):
-        if view_type == self._view_type
+        if view_type == self._view_type:
             yield self._view_type(view_type._backing_path, mode='r')
 
         if view_type == path.OutPath[self._view_type]:
