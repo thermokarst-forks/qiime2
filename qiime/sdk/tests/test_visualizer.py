@@ -154,9 +154,9 @@ class TestVisualizer(unittest.TestCase):
         mapping_viz = self.plugin.visualizers['mapping_viz']
 
         artifact1 = Artifact._from_view(Mapping, {'foo': 'abc', 'bar': 'def'},
-                                        typing.Dict[str, str], None)
+                                        dict, None)
         artifact2 = Artifact._from_view(Mapping, {'baz': 'abc', 'bazz': 'ghi'},
-                                        typing.Dict[str, str], None)
+                                        dict, None)
 
         result = mapping_viz(artifact1, artifact2, 'Key', 'Value')
 
@@ -199,7 +199,7 @@ class TestVisualizer(unittest.TestCase):
         most_common_viz = self.plugin.visualizers['most_common_viz']
 
         artifact = Artifact._from_view(IntSequence1, [42, 42, 10, 0, 42, 5, 0],
-                                       typing.List[int], None)
+                                       list, None)
 
         result = most_common_viz(artifact)
 
@@ -238,9 +238,9 @@ class TestVisualizer(unittest.TestCase):
         mapping_viz = self.plugin.visualizers['mapping_viz']
 
         artifact1 = Artifact._from_view(Mapping, {'foo': 'abc', 'bar': 'def'},
-                                        typing.Dict[str, str], None)
+                                        dict, None)
         artifact2 = Artifact._from_view(Mapping, {'baz': 'abc', 'bazz': 'ghi'},
-                                        typing.Dict[str, str], None)
+                                        dict, None)
 
         future = mapping_viz.async(artifact1, artifact2, 'Key', 'Value')
 

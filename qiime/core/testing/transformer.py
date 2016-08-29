@@ -18,7 +18,7 @@ from .format import (
 )
 
 
-def _1(view: typing.List[int]) -> FourIntsDirectoryFormat:
+def _1(view: list) -> FourIntsDirectoryFormat:
     odm = FourIntsDirectoryFormat()
     for i, int_ in enumerate(view, 1):
         odm.single_ints.add(int_, int, num=i)
@@ -32,13 +32,13 @@ def _2(data: int) -> SingleIntFormat:
     return outfile
 
 
-def _3(view: typing.List[int]) -> IntSequenceDirectoryFormat:
+def _3(view: list) -> IntSequenceDirectoryFormat:
     odm = IntSequenceDirectoryFormat()
-    odm.IntSequence.set(view, typing.List[int])
+    odm.IntSequence.set(view, list)
     return odm
 
 
-def _4(view: typing.List[int]) -> IntSequenceFormat:
+def _4(view: list) -> IntSequenceFormat:
     outfile = IntSequenceFormat()
     with outfile.open() as fh:
         for int_ in view:
@@ -46,13 +46,13 @@ def _4(view: typing.List[int]) -> IntSequenceFormat:
     return outfile
 
 
-def _5(view: typing.Dict[str, str]) -> MappingDirectoryFormat:
+def _5(view: dict) -> MappingDirectoryFormat:
     odm = MappingDirectoryFormat()
     odm.Mapping.set(view, dict)
     return odm
 
 
-def _6(view: typing.Dict[str, str]) -> MappingFormat:
+def _6(view: dict) -> MappingFormat:
     outfile = MappingFormat()
     with outfile.open() as fh:
         for key, value in view.items():
@@ -60,5 +60,5 @@ def _6(view: typing.Dict[str, str]) -> MappingFormat:
     return outfile
 
 
-def _7(df: FourIntsDirectoryFormat) -> typing.List[int]:
-    return df.single_ints.view(typing.List[int])
+def _7(df: FourIntsDirectoryFormat) -> list:
+    return df.single_ints.view(list)
