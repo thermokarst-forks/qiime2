@@ -8,6 +8,7 @@
 
 import os
 import re
+import shutil
 
 from qiime.core import transform
 from qiime.core import path as qpath
@@ -70,7 +71,8 @@ class BoundFile:
         self.pathspec = pathspec
         self.format = format
         self._directory_format = directory_format
-        self._path_maker = lambda: self._directory_format / self.pathspec
+        self._path_maker = lambda self: os.path.join(
+            self._directory_format.path, self.pathspec)
 
     def view(self, view_type):
         from_pattern = transform.ResourcePattern.from_view_type(
@@ -88,7 +90,7 @@ class BoundFile:
 
         transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)
-        result.move(self._path_maker(self, **kwargs))
+        shutil.move(str(result.path), self._path_maker(self, **kwargs))
 
     @property
     def path_maker(self):

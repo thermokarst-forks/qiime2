@@ -18,9 +18,9 @@ def identity(x):
 class ResourcePattern:
     @staticmethod
     def from_view_type(view_type):
-            if isinstance(view_type, (path.InPath, path.OutPath)):
+            if issubclass(view_type, (path.InPath, path.OutPath)):
                 return PathResource(view_type)
-            elif isinstance(view_type, (resource.file_format._FileFormat,
+            elif issubclass(view_type, (resource.file_format._FileFormat,
                                         resource.DirectoryFormat)):
                 return FormatResource(view_type)
             else:
@@ -31,22 +31,28 @@ class ResourcePattern:
         self._view_type = view_type
 
     def make_transformation(self, other):
-        has_transformation = False
-        for input_coercion, vt in self.yield_input_coercion():
-            for transformer, tv in self.yield_transformers(vt):
-                for output_coercion in other.yield_output_coercion(tv):
-                    has_transformation = True
-                    break
+        # This really just creates a depth-first traversal of an imaginary
+        # tree of depth 3, each generator is a level of the tree.
+        # TODO: make this a real graph traversal which can handle transitivity
+        components = self._traverse_transformers(other)
+        if components is not None:
+            input_coercion, transformer, output_coercion = components
 
-        def transformation(view):
-            view = input_coercion(view)
-            view = transformer(view)
-            return output_coercion(view)
+            def transformation(view):
+                view = input_coercion(view)
+                view = transformer(view)
+                return output_coercion(view)
 
-        if has_transformation:
             return transformation
+
         raise Exception("No transformation from %s to %s" %
                         (self._view_type, other._view_type))
+
+    def _traverse_transformers(self, other):
+        for input_coercion, vt in self.yield_input_coercion():
+            for transformer, out_type in self.yield_transformers(vt):
+                for output_coercion in other.yield_output_coercion(out_type):
+                    return input_coercion, transformer, output_coercion
 
     def yield_input_coercion(self):
         yield identity, self._view_type
@@ -87,7 +93,7 @@ class FormatResource(ResourcePattern):
 
     def yield_output_coercion(self, view_type):
         if view_type == self._view_type:
-            yield self._view_type(view_type._backing_path, mode='r')
+            yield lambda x: self._view_type(x._backing_path, mode='r')
 
         if view_type == path.OutPath[self._view_type]:
             yield lambda x: self._view_type(x, mode='r')

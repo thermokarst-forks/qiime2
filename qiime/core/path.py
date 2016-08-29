@@ -23,7 +23,7 @@ class InPath(_ConcretePath, typing.Generic[T]):
         return self
 
 
-class OutPath(InPath):
+class OutPath(InPath, typing.Generic[T]):
     def __new__(cls, dir=False, **kwargs):
         """
         Create a tempfile, return pathlib.Path reference to it.

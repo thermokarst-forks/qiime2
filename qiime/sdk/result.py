@@ -12,6 +12,7 @@ import functools
 import os
 import os.path
 import uuid
+import shutil
 
 import qiime.sdk
 import qiime.core.archiver as archiver
@@ -172,8 +173,8 @@ class Artifact(Result):
         # TODO: Fix the initialization of _archiver
         # Need data_spec
         artifact._archiver = archiver.Archiver(
-            uuid.uuid4(), type, provenance, output_dir_fmt.__name__,
-            data_initializer=result.move)
+            uuid.uuid4(), type, output_dir_fmt.__name__, provenance,
+            data_initializer=lambda path: shutil.move(result.path, path))
         return artifact
 
     def view(self, view_type):

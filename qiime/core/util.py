@@ -105,7 +105,8 @@ def parse_format(format_str):
     for type_format_record in pm.type_formats:
         if type_format_record.format.__name__ == format_str:
             return type_format_record.format
-    raise TypeError()
+
+    raise TypeError("No format: %s" % format_str)
 
 
 @contextlib.contextmanager
