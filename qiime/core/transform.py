@@ -2,7 +2,7 @@
 # Copyright (c) 2016--, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
-#git l
+#
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 import pathlib
@@ -107,6 +107,13 @@ class PathResource(ResourcePattern):
 
         return view
 
+    def validate(self, view):
+        normal_view = self.normalize(view)
+        if not isinstance(view, pathlib.PurePath):
+            raise TypeError("%r is not a path." % (view,))
+        fmt = self.format(normal_view, mode='r')
+        fmt.validate()
+
 
 class FormatResource(ResourcePattern):
     def yield_input_coercion(self):
@@ -126,8 +133,15 @@ class FormatResource(ResourcePattern):
 
         return view
 
+    def validate(self, view):
+        normal_view = self.normalize(view)
+        if not isinstance(normal_view, self._view_type):
+            raise TypeError("%r is not an instance of %r."
+                            % (view, self._view_type))
+        normal_view.validate()
 
-class SingleFileDirectoryPathResource(ResourcePattern):
+
+class SingleFileDirectoryPathResource(PathResource):
     @property
     def format(self):
         return self._view_type.__args__[0]
@@ -167,14 +181,8 @@ class SingleFileDirectoryPathResource(ResourcePattern):
         for coercion in self.pattern.yield_output_coercion(view_type):
             yield wrap(coercion)
 
-    def normalize(self, view):
-        if type(view) is str:
-            return pathlib.Path(view)
 
-        return view
-
-
-class SingleFileDirectoryResource(ResourcePattern):
+class SingleFileDirectoryResource(FormatResource):
     def __init__(self, view_type):
         composed_view_type = view_type.file.format
         self.pattern = FormatResource(composed_view_type)
@@ -208,12 +216,10 @@ class SingleFileDirectoryResource(ResourcePattern):
         for coercion in self.pattern.yield_output_coercion(view_type):
             yield wrap(coercion)
 
-    def normalize(self, view):
-        if type(view) is str:
-            return self._view_type(view, mode='r')
-
-        return view
-
 
 class ObjectResource(ResourcePattern):
-    pass
+
+    def validate(self, view):
+        if not isinstance(view, self._view_type):
+            raise TypeError("%r is not of type %r, cannot transform further."
+                            % (view, self._view_type))

@@ -15,7 +15,6 @@ import uuid
 import zipfile
 
 import qiime.core.type
-from qiime.plugin.resource.directory_format import ValidationError
 from qiime.sdk import Artifact, Provenance
 from qiime.sdk.result import ResultMetadata
 
@@ -401,24 +400,16 @@ class TestArtifact(unittest.TestCase):
         with open(fp, 'w') as fh:
             fh.write('42\n')
 
-        with self.assertRaisesRegex(NotADirectoryError,
-                                    "DataLayout\(name='four-ints', version=1\)"
-                                    ".*4 files.*test.txt"):
+        with self.assertRaisesRegex(ValueError,
+                                    "not.*directory"):
             Artifact.import_data(FourInts, fp)
 
     def test_import_data_with_wrong_number_of_files(self):
         data_dir = os.path.join(self.test_dir.name, 'test')
         os.mkdir(data_dir)
-        with open(os.path.join(data_dir, 'file1.txt'), 'w') as fh:
-            fh.write('42\n')
-        with open(os.path.join(data_dir, 'file2.txt'), 'w') as fh:
-            fh.write('43\n')
-
-        error_regex = ("DataLayout\(name='four-ints', version=1\).*"
-                       "4 files.*2 files.*test.*file1.txt, file2.txt, "
-                       "nested/file3.txt, nested/file4.txt")
-        with self.assertRaisesRegex(ValidationError, error_regex):
-            Artifact.import_data(FourInts, data_dir)
+        error_regex = ("Missing.*mapping.tsv.*MappingDirectoryFormat")
+        with self.assertRaisesRegex(ValueError, error_regex):
+            Artifact.import_data(Mapping, data_dir)
 
     def test_import_data_with_unrecognized_files(self):
         data_dir = os.path.join(self.test_dir.name, 'test')
@@ -434,18 +425,16 @@ class TestArtifact(unittest.TestCase):
         with open(os.path.join(nested, 'foo.txt'), 'w') as fh:
             fh.write('45\n')
 
-        error_regex = ("foo.txt.*DataLayout\(name='four-ints', version=1\).*"
-                       "file1.txt, file2.txt, nested/file3.txt, "
-                       "nested/file4.txt")
-        with self.assertRaisesRegex(ValidationError, error_regex):
+        error_regex = ("Unrecognized.*foo.txt.*FourIntsDirectoryFormat")
+        with self.assertRaisesRegex(ValueError, error_regex):
             Artifact.import_data(FourInts, data_dir)
 
     def test_import_data_with_unreachable_path(self):
-        with self.assertRaisesRegex(OSError, "Path does not exist.*foo.txt"):
+        with self.assertRaisesRegex(ValueError, "not.*directory"):
             Artifact.import_data(IntSequence1,
                                  os.path.join(self.test_dir.name, 'foo.txt'))
 
-        with self.assertRaisesRegex(OSError, "Path does not exist.*bar"):
+        with self.assertRaisesRegex(ValueError, "not.*directory"):
             Artifact.import_data(FourInts,
                                  os.path.join(self.test_dir.name, 'bar'))
 
@@ -457,8 +446,8 @@ class TestArtifact(unittest.TestCase):
             fh.write('abc\n')
             fh.write('123\n')
 
-        error_regex = "foo.txt.*'int-sequence'"
-        with self.assertRaisesRegex(ValidationError, error_regex):
+        error_regex = "foo.txt.*IntSequenceFormat"
+        with self.assertRaisesRegex(ValueError, error_regex):
             Artifact.import_data(IntSequence1, fp)
 
     def test_import_data_with_invalid_format_multi_file(self):
@@ -475,8 +464,8 @@ class TestArtifact(unittest.TestCase):
         with open(os.path.join(nested, 'file4.txt'), 'w') as fh:
             fh.write('foo\n')
 
-        error_regex = "file4.txt.*'single-int'"
-        with self.assertRaisesRegex(ValidationError, error_regex):
+        error_regex = "file4.txt.*SingleIntFormat"
+        with self.assertRaisesRegex(ValueError, error_regex):
             Artifact.import_data(FourInts, data_dir)
 
     def test_import_data_with_filepath(self):

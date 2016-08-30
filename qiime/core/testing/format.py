@@ -11,15 +11,34 @@ import qiime.plugin.resource as resource
 
 
 class IntSequenceFormat(TextFileFormat):
-    pass
+    def sniff(self):
+        with self.open() as fh:
+            for line, _ in zip(fh, range(5)):
+                try:
+                    int(line.rstrip('\n'))
+                except (TypeError, ValueError):
+                    return False
+            return True
 
 
 class MappingFormat(TextFileFormat):
-    pass
+    def sniff(self):
+        with self.open() as fh:
+            for line, _ in zip(fh, range(5)):
+                cells = line.rstrip('\n').split('\t')
+                if len(cells) != 2:
+                    return False
+            return True
 
 
 class SingleIntFormat(TextFileFormat):
-    pass
+    def sniff(self):
+        with self.open() as fh:
+            try:
+                int(fh.readline().rstrip('\n'))
+            except (TypeError, ValueError):
+                return False
+        return True
 
 
 IntSequenceDirectoryFormat = resource.SingleFileDirectoryFormat(

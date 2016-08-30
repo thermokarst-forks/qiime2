@@ -172,10 +172,10 @@ class Artifact(Result):
             # lookup default format for the type
             view_type = output_dir_fmt
 
-        # TODO: validate view w.r.t. view_type
-
         from_pattern = transform.ResourcePattern.from_view_type(view_type)
         to_pattern = transform.ResourcePattern.from_view_type(output_dir_fmt)
+
+        from_pattern.validate(view)
 
         transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)

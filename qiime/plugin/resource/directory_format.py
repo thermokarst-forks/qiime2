@@ -14,10 +14,6 @@ from qiime.core import path as qpath
 from .base import FormatBase
 
 
-class ValidationError(Exception):
-    pass
-
-
 class PathMakerDescriptor:
     def __init__(self, file):
         self.file = file
@@ -91,6 +87,19 @@ class BoundFile:
         result = transformation(view)
         result.path.rename(self.path_maker(**kwargs))
 
+    def _validate_members(self, collected_paths):
+        found_members = False
+        root = pathlib.Path(self._directory_format.path)
+        for path in collected_paths:
+            if re.match(self.pathspec, str(path.relative_to(root))):
+                collected_paths[path] = True
+                found_members = True
+                self.format(path, mode='r').validate()
+        if not found_members:
+            raise ValueError("Missing one or more files for %r of %s."
+                             % (self.pathspec,
+                                self._directory_format.__class__.__name__))
+
     @property
     def path_maker(self):
         def bound_path_maker(**kwargs):
@@ -133,11 +142,33 @@ class _DirectoryMeta(type):
         super().__init__(name, bases, dct)
         for key, value in dct.items():
             if isinstance(value, File):
+                # TODO: validate that the paths described by `value` are unique
+                # within a DirectoryFormat
                 value.name = key
 
 
 class DirectoryFormat(FormatBase, metaclass=_DirectoryMeta):
-    pass
+    def validate(self):
+        if not self.path.is_dir():
+            raise ValueError("%r is not a directory." % self.path)
+        collected_paths = {p: None for p in self.path.glob('**/*')
+                           if p.is_file()}
+
+        for field in self._fields:
+            field._validate_members(collected_paths)
+
+        for path, value in collected_paths.items():
+            if value:
+                continue
+            if value is None:
+                raise ValueError("Unrecognized file (%r) for %r."
+                                 % (path, self.__class__.__name__))
+
+    @property
+    def _fields(self):
+        for key, value in self.__class__.__dict__.items():
+            if isinstance(value, File):
+                yield getattr(self, key)
 
 
 class SingleFileDirectoryFormatBase(DirectoryFormat):
