@@ -5,6 +5,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
+import pathlib
 
 from qiime import sdk
 from qiime.plugin import resource
@@ -39,6 +40,7 @@ class ResourcePattern:
             input_coercion, transformer, output_coercion = components
 
             def transformation(view):
+                view = self.normalize(view)
                 view = input_coercion(view)
                 view = transformer(view)
                 return output_coercion(view)
@@ -67,6 +69,9 @@ class ResourcePattern:
         for type, record in self._pm.transformers[view_type].items():
             yield record.transformer, type
 
+    def normalize(self, view):
+        return view
+
 
 class PathResource(ResourcePattern):
     @property
@@ -84,6 +89,12 @@ class PathResource(ResourcePattern):
         if view_type == self.format:
             yield lambda x: path.InPath(x.path)
 
+    def normalize(self, view):
+        if type(view) is str:
+            return pathlib.Path(view)
+
+        return view
+
 
 class FormatResource(ResourcePattern):
     def yield_input_coercion(self):
@@ -96,6 +107,12 @@ class FormatResource(ResourcePattern):
 
         if view_type == path.OutPath[self._view_type]:
             yield lambda x: self._view_type(x, mode='r')
+
+    def normalize(self, view):
+        if type(view) is str:
+            return self._view_type(view, mode='r')
+
+        return view
 
 
 class ObjectResource(ResourcePattern):
