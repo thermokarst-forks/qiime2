@@ -21,6 +21,8 @@ from qiime.sdk.result import ResultMetadata
 
 from qiime.core.testing.type import IntSequence1, FourInts, Mapping
 from qiime.core.testing.util import get_dummy_plugin
+from qiime.core.testing.format import (FourIntsDirectoryFormat,
+                                       IntSequenceDirectoryFormat)
 
 
 class TestArtifact(unittest.TestCase):
@@ -404,7 +406,8 @@ class TestArtifact(unittest.TestCase):
         with self.assertRaisesRegex(NotADirectoryError,
                                     "DataLayout\(name='four-ints', version=1\)"
                                     ".*4 files.*test.txt"):
-            Artifact.import_data(FourInts, fp)
+            Artifact.import_data(FourInts, FourIntsDirectoryFormat(fp,
+                                                                   mode='r'))
 
     def test_import_data_with_wrong_number_of_files(self):
         data_dir = os.path.join(self.test_dir.name, 'test')
@@ -418,7 +421,8 @@ class TestArtifact(unittest.TestCase):
                        "4 files.*2 files.*test.*file1.txt, file2.txt, "
                        "nested/file3.txt, nested/file4.txt")
         with self.assertRaisesRegex(ValidationError, error_regex):
-            Artifact.import_data(FourInts, data_dir)
+            Artifact.import_data(FourInts, FourIntsDirectoryFormat(data_dir,
+                                                                   mode='r'))
 
     def test_import_data_with_unrecognized_files(self):
         data_dir = os.path.join(self.test_dir.name, 'test')
@@ -438,16 +442,24 @@ class TestArtifact(unittest.TestCase):
                        "file1.txt, file2.txt, nested/file3.txt, "
                        "nested/file4.txt")
         with self.assertRaisesRegex(ValidationError, error_regex):
-            Artifact.import_data(FourInts, data_dir)
+            Artifact.import_data(FourInts, FourIntsDirectoryFormat(data_dir,
+                                                                   mode='r'))
 
     def test_import_data_with_unreachable_path(self):
         with self.assertRaisesRegex(OSError, "Path does not exist.*foo.txt"):
             Artifact.import_data(IntSequence1,
-                                 os.path.join(self.test_dir.name, 'foo.txt'))
+                                 IntSequenceDirectoryFormat(
+                                     os.path.join(self.test_dir.name,
+                                                  'foo.txt'),
+                                     mode='r')
+                                 )
 
         with self.assertRaisesRegex(OSError, "Path does not exist.*bar"):
             Artifact.import_data(FourInts,
-                                 os.path.join(self.test_dir.name, 'bar'))
+                                 IntSequenceDirectoryFormat(
+                                     os.path.join(self.test_dir.name, 'bar'),
+                                     mode='r')
+                                 )
 
     def test_import_data_with_invalid_format_single_file(self):
         fp = os.path.join(self.test_dir.name, 'foo.txt')
@@ -459,7 +471,8 @@ class TestArtifact(unittest.TestCase):
 
         error_regex = "foo.txt.*'int-sequence'"
         with self.assertRaisesRegex(ValidationError, error_regex):
-            Artifact.import_data(IntSequence1, fp)
+            Artifact.import_data(IntSequence1,
+                                 IntSequenceDirectoryFormat(fp, mode='r'))
 
     def test_import_data_with_invalid_format_multi_file(self):
         data_dir = os.path.join(self.test_dir.name, 'test')
@@ -477,7 +490,8 @@ class TestArtifact(unittest.TestCase):
 
         error_regex = "file4.txt.*'single-int'"
         with self.assertRaisesRegex(ValidationError, error_regex):
-            Artifact.import_data(FourInts, data_dir)
+            Artifact.import_data(FourInts,
+                                 FourIntsDirectoryFormat(data_dir, mode='r'))
 
     def test_import_data_with_filepath(self):
         data_dir = os.path.join(self.test_dir.name, 'test')
@@ -490,7 +504,9 @@ class TestArtifact(unittest.TestCase):
             fh.write('42\n')
             fh.write('0\n')
 
-        artifact = Artifact.import_data(IntSequence1, fp)
+        artifact = Artifact.import_data(IntSequence1,
+                                        IntSequenceDirectoryFormat(fp,
+                                                                   mode='r'))
 
         self.assertEqual(artifact.type, IntSequence1)
         self.assertIn('importing data', artifact.provenance)
@@ -507,7 +523,9 @@ class TestArtifact(unittest.TestCase):
             fh.write('10\n')
             fh.write('100\n')
 
-        artifact = Artifact.import_data(IntSequence1, data_dir)
+        artifact = Artifact.import_data(IntSequence1,
+                                        IntSequenceDirectoryFormat(data_dir,
+                                                                   mode='r'))
 
         self.assertEqual(artifact.type, IntSequence1)
         self.assertIn('importing data', artifact.provenance)
@@ -528,7 +546,9 @@ class TestArtifact(unittest.TestCase):
         with open(os.path.join(nested, 'file4.txt'), 'w') as fh:
             fh.write('40\n')
 
-        artifact = Artifact.import_data(FourInts, data_dir)
+        artifact = Artifact.import_data(FourInts,
+                                        FourIntsDirectoryFormat(data_dir,
+                                                                mode='r'))
 
         self.assertEqual(artifact.type, FourInts)
         self.assertIn('importing data', artifact.provenance)
