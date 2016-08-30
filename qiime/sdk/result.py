@@ -170,11 +170,9 @@ class Artifact(Result):
         result = transformation(view)
 
         artifact = cls.__new__(cls)
-        # TODO: Fix the initialization of _archiver
-        # Need data_spec
         artifact._archiver = archiver.Archiver(
             uuid.uuid4(), type, output_dir_fmt.__name__, provenance,
-            data_initializer=lambda path: shutil.move(result.path, path))
+            data_initializer=result.path.rename)
         return artifact
 
     def view(self, view_type):

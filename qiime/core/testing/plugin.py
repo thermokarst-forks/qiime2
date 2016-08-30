@@ -6,6 +6,8 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from importlib import import_module
+
 import qiime
 import qiime.plugin
 
@@ -14,7 +16,7 @@ from .format import (
     MappingDirectoryFormat,
     FourIntsDirectoryFormat,
 )
-from .transformer import _1, _2, _3, _4, _5, _6, _7
+
 from .type import IntSequence1, IntSequence2, Mapping, FourInts
 from .method import concatenate_ints, split_ints, merge_mappings
 from .visualizer import most_common_viz, mapping_viz
@@ -28,20 +30,14 @@ dummy_plugin = qiime.plugin.Plugin(
     user_support_text='For help, see http://2.qiime.org'
 )
 
+import_module('qiime.core.testing.transformer')
+
 # Register semantic types
 dummy_plugin.register_semantic_type(IntSequence1)
 dummy_plugin.register_semantic_type(IntSequence2)
 dummy_plugin.register_semantic_type(Mapping)
 dummy_plugin.register_semantic_type(FourInts)
 
-# TODO: redo as decorators
-dummy_plugin.register_transformer(_1)
-dummy_plugin.register_transformer(_2)
-dummy_plugin.register_transformer(_3)
-dummy_plugin.register_transformer(_4)
-dummy_plugin.register_transformer(_5)
-dummy_plugin.register_transformer(_6)
-dummy_plugin.register_transformer(_7)
 
 dummy_plugin.register_semantic_type_to_format(
     IntSequence1,

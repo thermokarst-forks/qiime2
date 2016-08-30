@@ -23,11 +23,11 @@ class SingleIntFormat(TextFileFormat):
 
 
 class IntSequenceDirectoryFormat(resource.DirectoryFormat):
-    IntSequence = resource.File('ints.txt', format=IntSequenceFormat)
+    ints = resource.File('ints.txt', format=IntSequenceFormat)
 
 
 class MappingDirectoryFormat(resource.DirectoryFormat):
-    Mapping = resource.File('mapping.tsv', format=MappingFormat)
+    mapping = resource.File('mapping.tsv', format=MappingFormat)
 
 
 class FourIntsDirectoryFormat(resource.DirectoryFormat):

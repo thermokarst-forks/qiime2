@@ -11,18 +11,11 @@ import pathlib
 
 import qiime.core
 
+from .base import FormatBase
 
-class _FileFormat(metaclass=abc.ABCMeta):
-    def __init__(self, path=None, mode='w'):
-        if path is None:
-            self._backing_path = qiime.core.path.OutPath(
-                prefix='q2-%s-' % self.__class__.__name__
-            )
-        else:
-            self._backing_path = path
-        self.path = self._backing_path
-        self._mode = mode
 
+class _FileFormat(FormatBase, metaclass=abc.ABCMeta):
+    pass
 
 class TextFileFormat(_FileFormat):
     def open(self):

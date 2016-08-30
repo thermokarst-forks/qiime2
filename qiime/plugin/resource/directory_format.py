@@ -9,9 +9,11 @@
 import os
 import re
 import shutil
+import pathlib
 
 from qiime.core import transform
 from qiime.core import path as qpath
+from .base import FormatBase
 
 
 class ValidationError(Exception):
@@ -71,8 +73,7 @@ class BoundFile:
         self.pathspec = pathspec
         self.format = format
         self._directory_format = directory_format
-        self._path_maker = lambda self: os.path.join(
-            self._directory_format.path, self.pathspec)
+        self._path_maker = lambda s: pathspec
 
     def view(self, view_type):
         from_pattern = transform.ResourcePattern.from_view_type(
@@ -80,7 +81,7 @@ class BoundFile:
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
 
         transformation = from_pattern.make_transformation(to_pattern)
-        return transformation(self._path_maker())
+        return transformation(self.path_maker())
 
     def set(self, view, view_type, **kwargs):
         if self.mode != 'w':
@@ -90,12 +91,17 @@ class BoundFile:
 
         transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)
-        shutil.move(str(result.path), self._path_maker(self, **kwargs))
+        result.path.rename(self.path_maker(**kwargs))
 
     @property
     def path_maker(self):
         def bound_path_maker(**kwargs):
-            return self._path_maker(self._directory_format, **kwargs)
+            # Must wrap in a naive Path, otherwise an OutPath would be summoned
+            # into this world, and would destroy everything in its path.
+            path = pathlib.Path(self._directory_format.path) \
+                / self._path_maker(self._directory_format, **kwargs)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            return path
         return bound_path_maker
 
 
@@ -105,9 +111,12 @@ class BoundFileCollection(BoundFile):
         self._path_maker = path_maker
 
     def view(self, view_type):
-        root = self._directory_format.path
-        paths = [os.path.join(root, fp) for fp in os.listdir(root)
-                 if re.match(self.pathspec, fp)]
+        # Don't want an OutPath, just a Path
+        root = pathlib.Path(self._directory_format.path)
+        print(list(root.iterdir()))
+        paths = [fp for fp in root.iterdir()
+                 if re.match(self.pathspec, str(fp.relative_to(root)))]
+        print(paths)
         from_pattern = transform.ResourcePattern.from_view_type(
             qpath.InPath[self.format])
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
@@ -131,14 +140,5 @@ class _DirectoryMeta(type):
                 value.name = key
 
 
-class DirectoryFormat(metaclass=_DirectoryMeta):
-    def __init__(self, path=None, mode='w'):
-        if path is None:
-            self._backing_path = qpath.OutPath(
-                dir=True,
-                prefix='q2-%s-' % self.__class__.__name__
-            )
-        else:
-            self._backing_path = path
-        self.path = str(self._backing_path)
-        self._mode = mode
+class DirectoryFormat(FormatBase, metaclass=_DirectoryMeta):
+    pass
