@@ -11,7 +11,6 @@ import tempfile
 import unittest
 import uuid
 import warnings
-import typing
 
 import qiime.core.type
 from qiime.sdk import Result, Artifact, Visualization, Provenance

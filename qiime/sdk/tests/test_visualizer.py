@@ -14,7 +14,6 @@ import tempfile
 import unittest
 import uuid
 import zipfile
-import typing
 
 import qiime.plugin
 import qiime.core.type

@@ -7,15 +7,13 @@
 # ----------------------------------------------------------------------------
 
 import abc
-import pathlib
-
-import qiime.core
 
 from .base import FormatBase
 
 
 class _FileFormat(FormatBase, metaclass=abc.ABCMeta):
     pass
+
 
 class TextFileFormat(_FileFormat):
     def open(self):

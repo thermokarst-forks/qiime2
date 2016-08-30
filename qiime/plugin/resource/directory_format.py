@@ -6,9 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
 import re
-import shutil
 import pathlib
 
 from qiime.core import transform

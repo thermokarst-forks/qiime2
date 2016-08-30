@@ -12,7 +12,6 @@ import inspect
 import pkg_resources
 import unittest
 import uuid
-import typing
 
 import qiime.plugin
 from qiime.core.type import Signature

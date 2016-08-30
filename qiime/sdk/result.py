@@ -12,7 +12,6 @@ import functools
 import os
 import os.path
 import uuid
-import shutil
 
 import qiime.sdk
 import qiime.core.archiver as archiver
