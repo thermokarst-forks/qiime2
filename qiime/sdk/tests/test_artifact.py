@@ -13,7 +13,6 @@ import tempfile
 import unittest
 import uuid
 import zipfile
-import typing
 
 import qiime.core.type
 from qiime.plugin.resource.directory_format import ValidationError
@@ -254,7 +253,7 @@ class TestArtifact(unittest.TestCase):
         #
         # The following artifact was created with:
         #
-        #     artifact = Artifact._from_view([-1, 42, 0, 43], FourInts,
+        #     artifact = Artifact._from_view(FourInts, [-1, 42, 0, 43], list,
         #                                    self.provenance)
         #     artifact.save('externally_created_zipfile.qza')
         #

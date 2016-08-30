@@ -88,8 +88,7 @@ class PathResource(ResourcePattern):
 class FormatResource(ResourcePattern):
     def yield_input_coercion(self):
         yield identity, self._view_type
-        yield (lambda x: path.InPath(x.path),
-               path.InPath[self._view_type])
+        yield (lambda x: path.InPath(x.path), path.InPath[self._view_type])
 
     def yield_output_coercion(self, view_type):
         if view_type == self._view_type:

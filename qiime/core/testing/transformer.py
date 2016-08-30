@@ -17,86 +17,102 @@ from .format import (
 )
 from .plugin import dummy_plugin
 
-@dummy_plugin.register_transformer
-def _1(view: list) -> FourIntsDirectoryFormat:
-    odm = FourIntsDirectoryFormat()
-    for i, int_ in enumerate(view, 1):
-        odm.single_ints.add(int_, int, num=i)
-    return odm
 
 @dummy_plugin.register_transformer
-def _2(odm: FourIntsDirectoryFormat) -> list:
-    return list(odm.single_ints.view(int))
+def _1(data: list) -> FourIntsDirectoryFormat:
+    df = FourIntsDirectoryFormat()
+    for i, int_ in enumerate(data, 1):
+        df.single_ints.add(int_, int, num=i)
+    return df
 
 
 @dummy_plugin.register_transformer
 def _2(data: int) -> SingleIntFormat:
-    outfile = SingleIntFormat()
-    with outfile.open() as fh:
+    ff = SingleIntFormat()
+    with ff.open() as fh:
         fh.write('%d\n' % data)
-    return outfile
+    return ff
 
 
 @dummy_plugin.register_transformer
-def _(ff: SingleIntFormat) -> int:
+def _3(df: FourIntsDirectoryFormat) -> list:
+    return list(df.single_ints.view(int))
+
+
+@dummy_plugin.register_transformer
+def _4(df: IntSequenceDirectoryFormat) -> list:
+    return df.ints.view(list)
+
+
+@dummy_plugin.register_transformer
+def _5(ff: SingleIntFormat) -> int:
     with ff.open() as fh:
         return int(fh.read())
 
 
 @dummy_plugin.register_transformer
-def _3(view: list) -> IntSequenceDirectoryFormat:
-    odm = IntSequenceDirectoryFormat()
-    odm.ints.set(view, list)
-    return odm
+def _6(data: list) -> IntSequenceDirectoryFormat:
+    df = IntSequenceDirectoryFormat()
+    df.ints.set(data, list)
+    return df
 
 
 @dummy_plugin.register_transformer
-def _(odm: IntSequenceDirectoryFormat) -> list:
-    return odm.ints.view(list)
-
-
-@dummy_plugin.register_transformer
-def _4(view: list) -> IntSequenceFormat:
-    outfile = IntSequenceFormat()
-    with outfile.open() as fh:
-        for int_ in view:
+def _7(data: list) -> IntSequenceFormat:
+    ff = IntSequenceFormat()
+    with ff.open() as fh:
+        for int_ in data:
             fh.write('%d\n' % int_)
-    return outfile
+    return ff
 
 
 @dummy_plugin.register_transformer
-def _(ff: IntSequenceFormat) -> list:
-    print(ff)
+def _8(df: IntSequenceDirectoryFormat) -> collections.Counter:
+    return df.ints.view(collections.Counter)
+
+
+@dummy_plugin.register_transformer
+def _9(ff: IntSequenceFormat) -> list:
     with ff.open() as fh:
         return list(map(int, fh.readlines()))
 
 
 @dummy_plugin.register_transformer
-def _(odm: IntSequenceDirectoryFormat) -> collections.Counter:
-    return odm.ints.view(collections.Counter)
-
-
-@dummy_plugin.register_transformer
-def _(ff: IntSequenceFormat) -> collections.Counter:
-    x = ff.path
-    print(x)
-    print(x.exists())
-    print(ff)
+def _10(ff: IntSequenceFormat) -> collections.Counter:
     with ff.open() as fh:
         return collections.Counter(map(int, fh.readlines()))
 
 
 @dummy_plugin.register_transformer
-def _5(view: dict) -> MappingDirectoryFormat:
-    odm = MappingDirectoryFormat()
-    odm.mapping.set(view, dict)
-    return odm
+def _11(data: dict) -> MappingDirectoryFormat:
+    df = MappingDirectoryFormat()
+    df.mapping.set(data, dict)
+    return df
 
 
 @dummy_plugin.register_transformer
-def _6(view: dict) -> MappingFormat:
-    outfile = MappingFormat()
-    with outfile.open() as fh:
-        for key, value in view.items():
+def _12(data: dict) -> MappingFormat:
+    ff = MappingFormat()
+    with ff.open() as fh:
+        for key, value in data.items():
             fh.write('%s\t%s\n' % (key, value))
-    return outfile
+    return ff
+
+
+@dummy_plugin.register_transformer
+def _13(df: MappingDirectoryFormat) -> dict:
+    return df.mapping.view(dict)
+
+
+@dummy_plugin.register_transformer
+def _14(ff: MappingFormat) -> dict:
+    data = {}
+    with ff.open() as fh:
+        for line in fh:
+            key, value = line.rstrip('\n').split('\t')
+            if key in data:
+                raise ValueError(
+                    "mapping.txt file must have unique keys. Key %r was "
+                    "observed more than once." % key)
+            data[key] = value
+    return data

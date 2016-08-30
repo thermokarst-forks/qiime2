@@ -375,7 +375,7 @@ class TestMethod(unittest.TestCase):
                              exp_counter_view)
 
             # Accepts IntSequence1 | IntSequence2
-            artifact3 = Artifact._from_view([10, 20], IntSequence2, None)
+            artifact3 = Artifact._from_view(IntSequence2, [10, 20], list, None)
             future = method.async(artifact3, artifact1, artifact2, 55, 1)
             result = future.result()
 

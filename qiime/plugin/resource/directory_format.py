@@ -113,10 +113,8 @@ class BoundFileCollection(BoundFile):
     def view(self, view_type):
         # Don't want an OutPath, just a Path
         root = pathlib.Path(self._directory_format.path)
-        print(list(root.iterdir()))
-        paths = [fp for fp in root.iterdir()
+        paths = [fp for fp in sorted(root.glob('**/*'))
                  if re.match(self.pathspec, str(fp.relative_to(root)))]
-        print(paths)
         from_pattern = transform.ResourcePattern.from_view_type(
             qpath.InPath[self.format])
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
