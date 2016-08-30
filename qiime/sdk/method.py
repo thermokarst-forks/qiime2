@@ -224,8 +224,6 @@ class Method:
         self.description = description
         self.source = source
         self._plugin_name = plugin_name
-        # TODO: add self.plugin to match SemanticTypeRecord and
-        # TransformerRecord
 
         self._bind_executors()
 

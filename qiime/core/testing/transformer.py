@@ -8,7 +8,6 @@
 import collections
 
 from .format import (
-    IntSequenceDirectoryFormat,
     FourIntsDirectoryFormat,
     MappingDirectoryFormat,
     IntSequenceFormat,
@@ -40,21 +39,9 @@ def _3(df: FourIntsDirectoryFormat) -> list:
 
 
 @dummy_plugin.register_transformer
-def _4(df: IntSequenceDirectoryFormat) -> list:
-    return df.ints.view(list)
-
-
-@dummy_plugin.register_transformer
 def _5(ff: SingleIntFormat) -> int:
     with ff.open() as fh:
         return int(fh.read())
-
-
-@dummy_plugin.register_transformer
-def _6(data: list) -> IntSequenceDirectoryFormat:
-    df = IntSequenceDirectoryFormat()
-    df.ints.set(data, list)
-    return df
 
 
 @dummy_plugin.register_transformer
@@ -64,11 +51,6 @@ def _7(data: list) -> IntSequenceFormat:
         for int_ in data:
             fh.write('%d\n' % int_)
     return ff
-
-
-@dummy_plugin.register_transformer
-def _8(df: IntSequenceDirectoryFormat) -> collections.Counter:
-    return df.ints.view(collections.Counter)
 
 
 @dummy_plugin.register_transformer

@@ -68,7 +68,6 @@ class PluginManager:
     # something wrong, the entire plugin fails to load any piece, like a
     # databases rollback/commit
 
-    # TODO: rename other uses
     def get_directory_format(self, semantic_type):
         if not qiime.core.type.is_semantic_type(semantic_type):
             raise TypeError(

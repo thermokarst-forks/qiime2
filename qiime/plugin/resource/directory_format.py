@@ -138,3 +138,12 @@ class _DirectoryMeta(type):
 
 class DirectoryFormat(FormatBase, metaclass=_DirectoryMeta):
     pass
+
+
+class SingleFileDirectoryFormatBase(DirectoryFormat):
+    pass
+
+
+def SingleFileDirectoryFormat(name, pathspec, format):
+    return type(name, (SingleFileDirectoryFormatBase,),
+                {'file': File(pathspec, format=format)})

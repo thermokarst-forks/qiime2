@@ -22,8 +22,8 @@ class SingleIntFormat(TextFileFormat):
     pass
 
 
-class IntSequenceDirectoryFormat(resource.DirectoryFormat):
-    ints = resource.File('ints.txt', format=IntSequenceFormat)
+IntSequenceDirectoryFormat = resource.SingleFileDirectoryFormat(
+    'IntSequenceDirectoryFormat', 'ints.txt', IntSequenceFormat)
 
 
 class MappingDirectoryFormat(resource.DirectoryFormat):

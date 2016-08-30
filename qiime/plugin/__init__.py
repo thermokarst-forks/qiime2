@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from .resource import TextFileFormat, BinaryFileFormat
+from .resource import TextFileFormat, BinaryFileFormat, DirectoryFormat
 from .plugin import Plugin
 from .template import plugin_init
 
@@ -15,7 +15,7 @@ from qiime.core.type import (SemanticType, Int, Str, Float, Color, Metadata,
                              Arguments, Bool)
 
 
-__all__ = ['TextFileFormat', 'BinaryFileFormat', 'Plugin', 'SemanticType',
-           'Int', 'Str', 'Float', 'Color', 'Metadata', 'MetadataCategory',
-           'Properties', 'Range', 'Choices', 'Arguments', 'plugin_init',
-           'Bool']
+__all__ = ['TextFileFormat', 'BinaryFileFormat', 'DirectoryFormat', 'Plugin',
+           'SemanticType', 'Bool', 'Int', 'Str', 'Float', 'Color', 'Metadata',
+           'MetadataCategory', 'Properties', 'Range', 'Choices', 'Arguments',
+           'plugin_init']

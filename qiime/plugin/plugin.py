@@ -61,10 +61,13 @@ class Plugin:
                 raise TypeError()
             output = annotations.pop('return')
             input = list(annotations.values())[0]
+            if (input, output) in self.transformers:
+                raise TypeError("Duplicate transformer (%r) from %r to %r."
+                                % (transformer, input, output))
 
             self.transformers[input, output] = TransformerRecord(
                 transformer=transformer, restrict=restrict, plugin=self)
-            return None
+            return transformer
 
         if _fn is None:
             return decorator
