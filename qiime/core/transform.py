@@ -9,216 +9,177 @@ import pathlib
 
 from qiime import sdk
 from qiime.plugin import resource
-from qiime.core import path
-
-
-def identity(x):
-    return x
 
 
 class ResourcePattern:
     @staticmethod
     def from_view_type(view_type):
-            if issubclass(view_type, (path.InPath, path.OutPath)):
+        if issubclass(view_type, resource.base.FormatBase):
+            if issubclass(view_type,
+                          resource.SingleFileDirectoryFormatBase):
                 # HACK: this is necessary because we need to be able to "act"
                 # like a FileFormat when looking up transformers, but our
                 # input/output coercion still needs to bridge the
                 # transformation as we do not have transitivity
+
+                # In other words we have DX and we have transformers of X
+                # In a perfect world we would automatically define DX -> X and
+                # let transitivity handle it, but since that doesn't exist, we
+                # need to treat DX as if it were X and coerce behind the scenes
+
                 # TODO: redo this when transformers are transitive
-                if issubclass(view_type.__args__[0],
-                              resource.SingleFileDirectoryFormatBase):
-                    return SingleFileDirectoryPathResource(view_type)
-                return PathResource(view_type)
-            elif issubclass(view_type, (resource.file_format._FileFormat,
-                                        resource.DirectoryFormat)):
-                # HACK: Same as above
-                if issubclass(view_type,
-                              resource.SingleFileDirectoryFormatBase):
-                    return SingleFileDirectoryResource(view_type)
-                return FormatResource(view_type)
-            else:
-                return ObjectResource(view_type)
+                return SingleFileDirectoryFormatResource(view_type)
+            # Normal format type
+            return FormatResource(view_type)
+        else:
+            # TODO: supporting stdlib.typing may require an alternate
+            # resource pattern as `isinstance` is a meaningless operation
+            # for them so validation would need to be handled differently
+            return ObjectResource(view_type)
 
     def __init__(self, view_type):
         self._pm = sdk.PluginManager()
         self._view_type = view_type
 
     def make_transformation(self, other):
-        # This really just creates a depth-first traversal of an imaginary
-        # tree of depth 3, each generator is a level of the tree.
-        # TODO: make this a real graph traversal which can handle transitivity
-        components = self._traverse_transformers(other)
-        if components is not None:
-            input_coercion, transformer, output_coercion = components
+        transformer = self._get_transformer_to(other)
+        if transformer is None:
+            raise Exception("No transformation from %r to %r" %
+                            (self._view_type, other._view_type))
 
-            def transformation(view):
-                view = self.normalize(view)
-                view = input_coercion(view)
-                view = transformer(view)
-                return output_coercion(view)
+        def transformation(view):
+            view = self.coerce_view(view)
+            self.validate(view)
 
-            return transformation
+            new_view = transformer(view)
 
-        raise Exception("No transformation from %s to %s" %
-                        (self._view_type, other._view_type))
+            new_view = other.coerce_view(new_view)
+            other.validate(new_view)
 
-    def _traverse_transformers(self, other):
-        for input_coercion, vt in self.yield_input_coercion():
-            for transformer, out_type in self.yield_transformers(vt):
-                for output_coercion in other.yield_output_coercion(out_type):
-                    return input_coercion, transformer, output_coercion
+            return new_view
 
-    def yield_input_coercion(self):
-        yield identity, self._view_type
+        return transformation
 
-    def yield_output_coercion(self, view_type):
-        if view_type == self._view_type:
-            yield identity
+    def _get_transformer_to(self, other):
+        transformer = self._lookup_transformer(self._view_type,
+                                               other._view_type)
+        if transformer is None:
+            return other._get_transformer_from(self)
 
-    def yield_transformers(self, view_type):
-        if view_type == self._view_type:
-            yield identity, self._view_type
-        for type, record in self._pm.transformers[view_type].items():
-            yield record.transformer, type
+        return transformer
 
-    def normalize(self, view):
+    def _get_transformer_from(self, other):
+        return None
+
+    def coerce_view(self, view):
         return view
 
-
-class PathResource(ResourcePattern):
-    @property
-    def format(self):
-        return self._view_type.__args__[0]
-
-    def yield_input_coercion(self):
-        yield identity, self._view_type
-        yield lambda x: self.format(x, mode='r'), self.format
-
-    def yield_output_coercion(self, view_type):
-        if view_type == path.OutPath[self.format]:
-            yield lambda x: path.InPath(x)
-
-        if view_type == self.format:
-            yield lambda x: path.InPath(x.path)
-
-    def normalize(self, view):
-        if type(view) is str:
-            return pathlib.Path(view)
-
-        return view
-
-    def validate(self, view):
-        normal_view = self.normalize(view)
-        if not isinstance(view, pathlib.PurePath):
-            raise TypeError("%r is not a path." % (view,))
-        fmt = self.format(normal_view, mode='r')
-        fmt.validate()
+    def _lookup_transformer(self, from_, to_):
+        if from_ == to_:
+            return lambda view: view
+        try:
+            return self._pm.transformers[from_][to_].transformer
+        except KeyError:
+            return None
 
 
 class FormatResource(ResourcePattern):
-    def yield_input_coercion(self):
-        yield identity, self._view_type
-        yield (lambda x: path.InPath(x.path), path.InPath[self._view_type])
-
-    def yield_output_coercion(self, view_type):
-        if view_type == self._view_type:
-            yield lambda x: self._view_type(x.path, mode='r')
-
-        if view_type == path.OutPath[self._view_type]:
-            yield lambda x: self._view_type(x, mode='r')
-
-    def normalize(self, view):
-        if type(view) is str:
+    def coerce_view(self, view):
+        if type(view) is str or isinstance(view, pathlib.Path):
             return self._view_type(view, mode='r')
+
+        if isinstance(view, self._view_type):
+            # wrap original path (inheriting the lifetime) and return a
+            # read-only instance
+            return self._view_type(view.path, mode='r')
 
         return view
 
     def validate(self, view):
-        normal_view = self.normalize(view)
-        if not isinstance(normal_view, self._view_type):
+        if not isinstance(view, self._view_type):
             raise TypeError("%r is not an instance of %r."
                             % (view, self._view_type))
-        normal_view.validate()
+        # Formats have a validate method, so defer to it
+        view.validate()
 
 
-class SingleFileDirectoryPathResource(PathResource):
-    @property
-    def format(self):
-        return self._view_type.__args__[0]
-
+class SingleFileDirectoryFormatResource(FormatResource):
     def __init__(self, view_type):
-        composed_view_type = \
-            view_type.__origin__[view_type.__args__[0].file.format]
-        self.pattern = PathResource(composed_view_type)
+        # Single file directory formats have only one file named `file`
+        # allowing us construct a resource pattern from the format of `file`
+        self._wrapped_view_type = view_type.file.format
         super().__init__(view_type)
 
-    def yield_input_coercion(self):
-        def wrap(coercion):
-            def wrapped_coercion(view):
-                fmt = self.format(view, mode='r')
-                new_view = path.InPath(fmt.file.path_maker())
-                new_view.__backing_fmt = fmt
-                return coercion(new_view)
+    def _get_transformer_to(self, other):
+        # Legend:
+        # - Dx: single directory format of x
+        # - Dy: single directory format of y
+        # - x: input format x
+        # - y: output format y
+        # - ->: implicit transformer
+        # - =>: registered transformer
+        # - |: or, used when multiple situation are possible
 
-            return wrapped_coercion
+        # It looks like all permutations because it is...
 
-        yield identity, self._view_type
-        for coercion, vt in self.pattern.yield_input_coercion():
-            yield wrap(coercion), vt
+        # Dx -> y | Dy via Dx => y | Dy
+        transformer = self._wrap_transformer(self, other)
+        if transformer is not None:
+            return transformer
 
-    def yield_output_coercion(self, view_type):
-        def wrap(coercion):
-            def wrapped_coercion(view):
-                result = coercion(view)
-                odm = self.format()
-                odm.file.set(result, self.pattern._view_type)
-                return path.InPath(odm.path)
+        # Dx -> Dy via Dx -> x => y | Dy
+        transformer = self._wrap_transformer(self, other, wrap_input=True)
+        if transformer is not None:
+            return transformer
 
-            return wrapped_coercion
+        if type(other) is type(self):
+            # Dx -> Dy via Dx -> x => y -> Dy
+            transformer = self._wrap_transformer(
+                self, other, wrap_input=True, wrap_output=True)
+            if transformer is not None:
+                return transformer
 
-        if view_type == path.OutPath[self.format]:
-            yield lambda x: path.InPath(x)
-        for coercion in self.pattern.yield_output_coercion(view_type):
-            yield wrap(coercion)
+        # Out of options, try for Dx -> Dy via Dx => y -> Dy
+        return other._get_transformer_from(self)
 
+    def _get_transformer_from(self, other):
+        # x | Dx -> Dy via x | Dx => y -> Dy
+        # IMPORTANT: reverse other and self, this method is like __radd__
+        return self._wrap_transformer(other, self, wrap_output=True)
 
-class SingleFileDirectoryResource(FormatResource):
-    def __init__(self, view_type):
-        composed_view_type = view_type.file.format
-        self.pattern = FormatResource(composed_view_type)
-        super().__init__(view_type)
+    def _wrap_transformer(self, in_, out_, wrap_input=False,
+                          wrap_output=False):
+        input = in_._wrapped_view_type if wrap_input else in_._view_type
+        output = out_._wrapped_view_type if wrap_output else out_._view_type
 
-    def yield_input_coercion(self):
-        def wrap(coercion):
-            def wrapped_coercion(fmt):
-                new_view = fmt.file.view(self.pattern._view_type)
-                new_view.__backing_fmt = fmt
-                return coercion(new_view)
+        transformer = self._lookup_transformer(input, output)
+        if transformer is None:
+            return None
 
-            return wrapped_coercion
+        if wrap_input:
+            transformer = self._wrap_input(transformer)
 
-        yield identity, self._view_type
-        for coercion, vt in self.pattern.yield_input_coercion():
-            yield wrap(coercion), vt
+        if wrap_output:
+            transformer = self._wrap_output(transformer)
 
-    def yield_output_coercion(self, view_type):
-        def wrap(coercion):
-            def wrapped_coercion(view):
-                result = coercion(view)
-                odm = self._view_type()
-                odm.file.set(result, self.pattern._view_type)
-                return self._view_type(odm.path, mode='r')
+        return transformer
 
-            return wrapped_coercion
+    def _wrap_input(self, transformer):
+        def wrapped(view):
+            return transformer(view.file.view(self._wrapped_view_type))
 
-        if view_type == self._view_type:
-            yield lambda x: self._view_type(x.path, mode='r')
-        for coercion in self.pattern.yield_output_coercion(view_type):
-            yield wrap(coercion)
+        return wrapped
+
+    def _wrap_output(self, transformer):
+        def wrapped(view):
+            new_view = self._view_type()
+            new_view.file.set(transformer(view), self._wrapped_view_type)
+            return new_view
+
+        return wrapped
 
 
 class ObjectResource(ResourcePattern):
-
     def validate(self, view):
         if not isinstance(view, self._view_type):
             raise TypeError("%r is not of type %r, cannot transform further."

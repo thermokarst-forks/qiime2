@@ -19,7 +19,6 @@ import qiime.core.archiver as archiver
 import qiime.core.type
 import qiime.core.util as util
 import qiime.core.transform as transform
-import qiime.core.path as path
 import qiime.plugin.resource as resource
 
 # Note: Result, Artifact, and Visualization classes are in this file to avoid
@@ -175,8 +174,6 @@ class Artifact(Result):
         from_pattern = transform.ResourcePattern.from_view_type(view_type)
         to_pattern = transform.ResourcePattern.from_view_type(output_dir_fmt)
 
-        from_pattern.validate(view)
-
         transformation = from_pattern.make_transformation(to_pattern)
         result = transformation(view)
 
@@ -187,8 +184,7 @@ class Artifact(Result):
         return artifact
 
     def view(self, view_type):
-        from_pattern = transform.ResourcePattern.from_view_type(
-            path.InPath[self.format])
+        from_pattern = transform.ResourcePattern.from_view_type(self.format)
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
         transformation = from_pattern.make_transformation(to_pattern)
         return self._archiver.load_data(transformation)

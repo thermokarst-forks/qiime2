@@ -10,7 +10,6 @@ import re
 import pathlib
 
 from qiime.core import transform
-from qiime.core import path as qpath
 from .base import FormatBase
 
 
@@ -70,8 +69,7 @@ class BoundFile:
         self._path_maker = lambda s: pathspec
 
     def view(self, view_type):
-        from_pattern = transform.ResourcePattern.from_view_type(
-            qpath.InPath[self.format])
+        from_pattern = transform.ResourcePattern.from_view_type(self.format)
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
 
         transformation = from_pattern.make_transformation(to_pattern)
@@ -122,8 +120,7 @@ class BoundFileCollection(BoundFile):
         root = pathlib.Path(self._directory_format.path)
         paths = [fp for fp in sorted(root.glob('**/*'))
                  if re.match(self.pathspec, str(fp.relative_to(root)))]
-        from_pattern = transform.ResourcePattern.from_view_type(
-            qpath.InPath[self.format])
+        from_pattern = transform.ResourcePattern.from_view_type(self.format)
         to_pattern = transform.ResourcePattern.from_view_type(view_type)
 
         transformation = from_pattern.make_transformation(to_pattern)
