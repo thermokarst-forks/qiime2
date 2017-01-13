@@ -1,44 +1,40 @@
-from qiime2.config import Config, config_profile
-
-print(Config)
-# > Config<profile=None>
-
-print(Config.valid)
-# > True
-
-print(Config.values)
-# > {
-# >     'dev':
-# >         {
-# >             'is_this_working': 'hello world',
-# >             'dev_mode': True,
-# >         }
-# > }
-
-with config_profile('foo'):
-    print(Config)
-    # > Config<profile='foo'>
+from qiime2 import config
 
 
-with config_profile('/path/to/bar'):
-    print(Config)
-    # > Config<profile='bar'>
+Config = config.get_active_config()
 
+Config.profile_name()
+Config.is_modified()
+Config.diffs()
+Config.diffs(pretty=True)
 
-# With a 'default' profile in the search path:
-print(Config)
-# > Config<profile='default'>
+Config['dev']['is_this_working']
+Config['dev']['is_this_working'].is_modified()
+Config['dev']['is_this_working'].diff()
 
+Config['dev']  # return list of section keys
+Config.sections()  # return list of sections
+Config.is_current()
 
-print(Config.list_valid_profiles())
-# > ['default', 'foo', 'bar']
+type(Config['dev'])  # ConfigSection
+type(Config['dev']['is_this_working'])  # ConfigValue
 
-print(Config.list_invalid_profiles())
-# > ['baz']
+config.from_ini('/path/to/foo')
 
+with config.activate_profile('foo'):
+    print(config.get_current_config())
 
-Config.new_profile('quux')
-Config.delete_profile('quux')
-Config.backup('/path/to/default')  # appends unix timestamp
-print(Config.list_valid_profiles())
-# > ['default', 'default-1484261576', 'foo', 'bar']
+Custom_Config = config.from_dict({'dev': {'is_this_working': True,
+                                          'dev_mode': False}})
+print(config.get_current_config())
+with config.use_custom_config(Custom_Config):
+    print(config.get_current_config())
+
+config.add_profile('bar')
+config.delete_profile('~/bar')
+config.copy_profile('foo', 'bar')
+config.backup_profile('bar')
+config.list_profiles()
+config.list_profiles(valid=True)
+
+config.save_config_to_profile(Custom_Config, 'custom_profile')
