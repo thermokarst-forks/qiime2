@@ -1,23 +1,12 @@
 from qiime2 import config
 
 
-Config = config.get_active_config()
+cfg = config.get_active_config()
 
-Config.profile_name()
-Config.is_modified()
-Config.diffs()
-Config.diffs(pretty=True)
-
-Config['dev']['is_this_working']
-Config['dev']['is_this_working'].is_modified()
-Config['dev']['is_this_working'].diff()
-
-Config['dev']  # return list of section keys
-Config.sections()  # return list of sections
-Config.is_current()
-
-type(Config['dev'])  # ConfigSection
-type(Config['dev']['is_this_working'])  # ConfigValue
+cfg.profile_name
+cfg.is_modified
+cfg.diffs()
+cfg.diffs(pretty=True)
 
 config.from_ini('/path/to/foo')
 
@@ -36,5 +25,7 @@ config.copy_profile('foo', 'bar')
 config.backup_profile('bar')
 config.list_profiles()
 config.list_profiles(valid=True)
+
+config.current_profile()
 
 config.save_config_to_profile(Custom_Config, 'custom_profile')
