@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-lg-12">
+      <p>
+        To download a TSV of this table, click
+        <a href="metadata.tsv" download="metadata.tsv">here</a>.
+      </p>
+      <p>
+        <i>Click on a Column header to sort the table.</i>
+      </p>
+      {{ table }}
+    </div>
+  </div>
+  <script src="./js/tsorter.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    function init() {
+      var sorter = tsorter.create('table');
+    }
+
+    window.onload = init;
+  </script>
+  <style media="screen">
+    #table th.descend:after{
+      content: "\25B2";
+    }
+    #table th.ascend:after{
+      content: "\25BC";
+    }
+  </style>
+{% endblock %}
