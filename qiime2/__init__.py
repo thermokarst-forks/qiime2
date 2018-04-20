@@ -6,6 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+"""QIIME 2 is a next-generation microbiome bioinformatics platform that is
+extensible, free, open source, and community developed.
+
+"""
+
 from qiime2.sdk import Artifact, Visualization
 from qiime2.metadata import (Metadata, MetadataColumn,
                              CategoricalMetadataColumn, NumericMetadataColumn)

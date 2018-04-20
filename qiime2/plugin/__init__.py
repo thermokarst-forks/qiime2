@@ -6,6 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+r"""
+The Plugin Object (:mod:`qiime2.plugin`)
+========================================
+
+Foo
+"""
+
 from .model import (TextFileFormat, BinaryFileFormat, DirectoryFormat,
                     ValidationError)
 from .plugin import Plugin
