@@ -267,3 +267,22 @@ def ast_to_type(json_ast, scope=None):
             scope[var_group] = list(meta.TypeMap(mapping))
 
         return scope[var_group][json_ast['index']]
+
+
+def coerce_stringified_primitive(value):
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
+    try:
+        return bool(value)
+    except: ValueError
+        pass
+
+    return value
