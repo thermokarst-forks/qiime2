@@ -14,6 +14,11 @@ import qiime2.core.type
 import enum
 
 
+class FormatFilters(enum.Flag):
+    EXPORTABLE = enum.auto()
+    IMPORTABLE = enum.auto()
+
+
 class PluginManager:
     entry_point_group = 'qiime2.plugins'
     __instance = None
@@ -144,74 +149,54 @@ class PluginManager:
 
         return types
 
-    class FormatFilters(enum.Flag):
-        EXPORTABLE = enum.auto()
-        IMPORTABLE = enum.auto()
-
     # TODO: Should plugin loading be transactional? i.e. if there's
     # something wrong, the entire plugin fails to load any piece, like a
     # databases rollback/commit
 
     def get_formats(self, *, filter=None, semantic_type=None):
+        if semantic_type is not None and semantic_type not in self.get_semantic_types():
+            raise ValueError()
 
-        result_formats = set()
+        if filter is not None and filter not in FormatFilters:
+            raise ValueError()
 
         if semantic_type is None:
-            if filter is None:
-                return self.formats
-
-            if self.FormatFilters.IMPORTABLE in filter:
-                result_formats = result_formats.union(self._importable)
-
-            if self.FormatFilters.EXPORTABLE in filter:
-                result_formats = result_formats.union(self._exportable)
-
+            formats = self.formats
         else:
+            formats = {}
+            for type_format in self.type_formats:
+                if semantic_type <= type_format.type_expression:
+                    formats[type_format.format] = type_format
 
-            if semantic_type not in self.get_semantic_types():
-                raise ValueError("The semantic type provided: %s is not "
-                                 "valid.", (semantic_type))
+        importable_formats = self._get_importable_formats(formats)
+        exportable_formats = self._get_exportable_formats(formats)
 
-            if filter is None:
-                filter = self.FormatFilters.IMPORTABLE | \
-                            self.FormatFilters.EXPORTABLE
-
-                for type_format in self.type_formats:
-                    if semantic_type in type_format.type_expression:
-                        result_formats = result_formats.union(
-                            type_format.format)
-
-                    if self.FormatFilters.IMPORTABLE in filter:
-
-                        result_formats = result_formats.union(
-                                self.get_format_to(type_format.format))
-
-                    if self.FormatFilters.EXPORTABLE in filter:
-
-                        result_formats = result_formats.union(
-                            self.get_format_from(type_format.format))
-
-        return result_formats
-
-    def get_format_from(self, canonical_format):
-
-        formats = set()
-
-        for format in self._reverse_transformers[canonical_format]:
-            formats.add(format)
-        formats.add(canonical_format)
+        if filter is None:
+            formats = {**formats, **importable_formats, **exportable_formats}
+        elif filter is FormatFilters.IMPORTABLE:
+            formats = importable_formats
+        elif filter is FormatFilters.EXPORTABLE:
+            formats = exportable_formats
+        elif filter is FormatFilters.IMPORTABLE | FormatFilters.EXPORTABLE:
+            formats = {**importable_formats, **exportable_formats}
 
         return formats
 
-    def get_format_to(self, canonical_format):
+    def _get_importable_formats(self, formats):
+        importable_formats = {}
+        for format_ in formats:
+            if format_ in self._reverse_transformers:
+                for imp_fmt, rec in self._reverse_transformers[format_].items():
+                    importable_formats[imp_fmt] = rec
+        return importable_formats
 
-        formats = set()
-
-        for format in self.transformers[canonical_format]:
-            formats.add(format)
-        formats.add(canonical_format)
-
-        return formats
+    def _get_exportable_formats(self, formats):
+        exportable_formats = {}
+        for format_ in formats:
+            if format_ in self.transformers:
+                for imp_fmt, rec in self.transformers[format_].items():
+                    exportable_formats[imp_fmt] = rec
+        return exportable_formats
 
     def get_directory_format(self, semantic_type):
         if not qiime2.core.type.is_semantic_type(semantic_type):
