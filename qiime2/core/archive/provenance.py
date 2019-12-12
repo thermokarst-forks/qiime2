@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2020, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -13,7 +13,7 @@ import uuid
 import copy
 import shutil
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import distutils
 import yaml
@@ -23,6 +23,15 @@ import dateutil.relativedelta as relativedelta
 import qiime2
 import qiime2.core.util as util
 from qiime2.core.cite import Citations
+
+
+def _ts_to_date(ts):
+    time_zone = timezone.utc
+    try:
+        time_zone = tzlocal.get_localzone()
+    except ValueError:
+        pass
+    return datetime.fromtimestamp(ts, tz=time_zone)
 
 
 # Used to give PyYAML something to recognize for custom tags
@@ -244,15 +253,12 @@ class ProvenanceCapture:
 
         return recorder
 
-    def _ts_to_date(self, ts):
-        return datetime.fromtimestamp(ts, tzlocal.get_localzone())
-
     def make_execution_section(self):
         execution = collections.OrderedDict()
         execution['uuid'] = str(self.uuid)
         execution['runtime'] = runtime = collections.OrderedDict()
-        runtime['start'] = start = self._ts_to_date(self.start)
-        runtime['end'] = end = self._ts_to_date(self.end)
+        runtime['start'] = start = _ts_to_date(self.start)
+        runtime['end'] = end = _ts_to_date(self.end)
         runtime['duration'] = \
             util.duration_time(relativedelta.relativedelta(end, start))
 

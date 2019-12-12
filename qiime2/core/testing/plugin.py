@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2020, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -47,6 +47,10 @@ from .pipeline import (parameter_only_pipeline, typical_pipeline,
                        pipelines_in_pipeline, pointless_pipeline,
                        failing_pipeline)
 from ..cite import Citations
+
+from .examples import (concatenate_ints_simple, concatenate_ints_complex,
+                       typical_pipeline_simple, typical_pipeline_complex)
+
 
 citations = Citations.load('citations.bib', package='qiime2.core.testing')
 dummy_plugin = Plugin(
@@ -135,7 +139,9 @@ dummy_plugin.methods.register_function(
     name='Concatenate integers',
     description='This method concatenates integers into a single sequence in '
                 'the order they are provided.',
-    citations=[citations['baerheim1994effect']]
+    citations=[citations['baerheim1994effect']],
+    examples={'concatenate_ints_simple': concatenate_ints_simple,
+              'concatenate_ints_complex': concatenate_ints_complex},
 )
 
 T = TypeMatch([IntSequence1, IntSequence2])
@@ -544,7 +550,9 @@ dummy_plugin.pipelines.register_function(
     },
     name='A typical pipeline with the potential to raise an error',
     description='Waste some time shuffling data around for no reason',
-    citations=citations  # ALL of them.
+    citations=citations,  # ALL of them.
+    examples={'typical_pipeline_simple': typical_pipeline_simple,
+              'typical_pipeline_complex': typical_pipeline_complex},
 )
 
 dummy_plugin.pipelines.register_function(

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2016-2019, QIIME 2 development team.
+# Copyright (c) 2016-2020, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -38,14 +38,14 @@ class PluginManager:
 
     # This class is a singleton as it is slow to create, represents the
     # state of a qiime2 installation, and is needed *everywhere*
-    def __new__(cls, install_plugins=True):
+    def __new__(cls, add_plugins=True):
         if cls.__instance is None:
             self = super().__new__(cls)
-            self._init(install_plugins=install_plugins)
+            self._init(add_plugins=add_plugins)
             cls.__instance = self
         return cls.__instance
 
-    def _init(self, install_plugins):
+    def _init(self, add_plugins):
         self.plugins = {}
         self._plugin_by_id = {}
         self.semantic_types = {}
@@ -54,7 +54,7 @@ class PluginManager:
         self.views = {}
         self.type_formats = []
 
-        if install_plugins:
+        if add_plugins:
             # These are all dependent loops, each requires the loop above it to
             # be completed.
             for entry_point in self.iter_entry_points():
@@ -62,9 +62,9 @@ class PluginManager:
                 package = entry_point.module_name.split('.')[0]
                 plugin = entry_point.load()
 
-                self.install_plugin(plugin, package, project_name)
+                self.add_plugin(plugin, package, project_name)
 
-    def install_plugin(self, plugin, package=None, project_name=None):
+    def add_plugin(self, plugin, package=None, project_name=None):
         self.plugins[plugin.name] = plugin
         self._plugin_by_id[plugin.id] = plugin
         if plugin.package is None:
@@ -78,9 +78,17 @@ class PluginManager:
         if id is None and name is None:
             raise ValueError("No plugin requested.")
         elif id is not None:
-            return self._plugin_by_id[id]
+            try:
+                return self._plugin_by_id[id]
+            except KeyError:
+                raise KeyError('No plugin currently registered '
+                               'with id: "%s".' % (id,))
         else:
-            return self.plugins[name]
+            try:
+                return self.plugins[name]
+            except KeyError:
+                raise KeyError('No plugin currently registered '
+                               'with name: "%s".' % (name,))
 
     def _integrate_plugin(self, plugin):
         for type_name, type_record in plugin.types.items():
