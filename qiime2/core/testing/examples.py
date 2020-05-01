@@ -8,27 +8,25 @@
 
 import pandas as pd
 
-from qiime2 import Artifact, Metadata, CategoricalMetadataColumn
+from qiime2 import Metadata, CategoricalMetadataColumn
 
 from qiime2.plugin import UsageAction, UsageInputs, UsageOutputNames
 
-from .type import IntSequence1, IntSequence2, Mapping
-
 
 def ints1_factory():
-    return Artifact.import_data(IntSequence1, [0, 1, 2])
+    return [0, 1, 2]
 
 
 def ints2_factory():
-    return Artifact.import_data(IntSequence1, [3, 4, 5])
+    return [3, 4, 5]
 
 
 def ints3_factory():
-    return Artifact.import_data(IntSequence2, [6, 7, 8])
+    return [6, 7, 8]
 
 
 def mapping1_factory():
-    return Artifact.import_data(Mapping, {'a': 42})
+    return {'a': 42}
 
 
 def md1_factory():
@@ -51,9 +49,9 @@ def mdc1_factory():
 
 
 def concatenate_ints_simple(use):
-    ints_a = use.init_data('ints_a', ints1_factory)
-    ints_b = use.init_data('ints_b', ints2_factory)
-    ints_c = use.init_data('ints_c', ints3_factory)
+    ints_a = use.init_data('ints_a', ints1_factory, 'IntSequence1')
+    ints_b = use.init_data('ints_b', ints2_factory, 'IntSequence1')
+    ints_c = use.init_data('ints_c', ints3_factory, 'IntSequence2')
 
     use.comment('This example demonstrates basic usage.')
     use.action(
@@ -64,9 +62,9 @@ def concatenate_ints_simple(use):
 
 
 def concatenate_ints_complex(use):
-    ints_a = use.init_data('ints_a', ints1_factory)
-    ints_b = use.init_data('ints_b', ints2_factory)
-    ints_c = use.init_data('ints_c', ints3_factory)
+    ints_a = use.init_data('ints_a', ints1_factory, 'IntSequence1')
+    ints_b = use.init_data('ints_b', ints2_factory, 'IntSequence1')
+    ints_c = use.init_data('ints_c', ints3_factory, 'IntSequence2')
 
     use.comment('This example demonstrates chained usage (pt 1).')
     use.action(
@@ -85,8 +83,8 @@ def concatenate_ints_complex(use):
 
 
 def typical_pipeline_simple(use):
-    ints = use.init_data('ints', ints1_factory)
-    mapper = use.init_data('mapper', mapping1_factory)
+    ints = use.init_data('ints', ints1_factory, 'IntSequence1')
+    mapper = use.init_data('mapper', mapping1_factory, 'Mapping')
 
     use.action(
         UsageAction(plugin_id='dummy_plugin', action_id='typical_pipeline'),
@@ -97,9 +95,8 @@ def typical_pipeline_simple(use):
 
 
 def typical_pipeline_complex(use):
-    ints1 = use.init_data('ints1', ints1_factory)
-    mapper1 = use.init_data('mapper1', mapping1_factory)
-
+    ints1 = use.init_data('ints1', ints1_factory, 'IntSequence1')
+    mapper1 = use.init_data('mapper1', mapping1_factory, 'Mapping')
     use.action(
         UsageAction(plugin_id='dummy_plugin', action_id='typical_pipeline'),
         UsageInputs(int_sequence=ints1, mapping=mapper1, do_extra_thing=True),
@@ -131,8 +128,8 @@ def comments_only(use):
 
 
 def identity_with_metadata_simple(use):
-    ints = use.init_data('ints', ints1_factory)
-    md = use.init_data('md', md1_factory)
+    ints = use.init_data('ints', ints1_factory, 'IntSequence1')
+    md = use.init_data('md', md1_factory, 'Metadata')
 
     use.action(
         UsageAction(plugin_id='dummy_plugin',
@@ -143,9 +140,9 @@ def identity_with_metadata_simple(use):
 
 
 def identity_with_metadata_merging(use):
-    ints = use.init_data('ints', ints1_factory)
-    md1 = use.init_data('md1', md1_factory)
-    md2 = use.init_data('md2', md2_factory)
+    ints = use.init_data('ints', ints1_factory, 'IntSequence1')
+    md1 = use.init_data('md1', md1_factory, 'Metadata')
+    md2 = use.init_data('md2', md2_factory, 'Metadata')
 
     md3 = use.merge_metadata('md3', md1, md2)
 
@@ -158,8 +155,8 @@ def identity_with_metadata_merging(use):
 
 
 def identity_with_metadata_column_get_mdc(use):
-    ints = use.init_data('ints', ints1_factory)
-    md = use.init_data('md', md1_factory)
+    ints = use.init_data('ints', ints1_factory, 'IntSequence1')
+    md = use.init_data('md', md1_factory, 'Metadata')
 
     mdc = use.get_metadata_column('mdc', md, 'a')
 

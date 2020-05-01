@@ -161,6 +161,7 @@ class UsageOutputNames:
 
 class ScopeRecord:
     def __init__(self, ref: str, value: object = None,
+                 data_type: object = None,
                  assert_has_line_matching: callable = None):
         if assert_has_line_matching is not None and \
                 not callable(assert_has_line_matching):
@@ -169,6 +170,7 @@ class ScopeRecord:
 
         self.ref = ref
         self._result = value
+        self._data_type = data_type
         self._assert_has_line_matching_ = assert_has_line_matching
 
     def __repr__(self):
@@ -177,6 +179,10 @@ class ScopeRecord:
     @property
     def result(self):
         return self._result
+
+    @property
+    def data_type(self):
+        return self._data_type
 
     def assert_has_line_matching(self, label, path, expression):
         return self._assert_has_line_matching_(self.ref, label, path,
@@ -194,8 +200,9 @@ class Scope:
     def records(self):
         return types.MappingProxyType(self._records)
 
-    def push_record(self, ref, value, assert_has_line_matching=None):
-        record = ScopeRecord(ref=ref, value=value,
+    def push_record(self, ref, value, data_type=None,
+                    assert_has_line_matching=None):
+        record = ScopeRecord(ref=ref, value=value, data_type=data_type,
                              assert_has_line_matching=assert_has_line_matching)
         self._records[ref] = record
         return record
@@ -211,9 +218,20 @@ class Usage(metaclass=abc.ABCMeta):
     def __init__(self):
         self._scope = Scope()
 
-    def init_data(self, ref, factory):
-        value = self._init_data_(ref, factory)
-        return self._push_record(ref, value)
+    def _repackage_factory(self, factory, data_type):
+        if data_type == 'Metadata':
+            raise NotImplementedError
+        elif data_type == 'CategoricalMetadataColumn':
+            raise NotImplementedError
+        elif data_type == 'NumericMetadataColumn':
+            raise NotImplementedError
+        else:
+            return lambda: sdk.Artifact.import_data(data_type, factory())
+
+    def init_data(self, ref, factory, data_type):
+        repackaged_factory = self._repackage_factory(factory, data_type)
+        value = self._init_data_(ref, repackaged_factory)
+        return self._push_record(ref, value, data_type)
 
     def _init_data_(self, ref, factory):
         raise NotImplementedError
@@ -272,9 +290,9 @@ class Usage(metaclass=abc.ABCMeta):
             ref = outputs.get(output)
             self._push_record(ref, result)
 
-    def _push_record(self, ref, value):
+    def _push_record(self, ref, value, data_type=None):
         return self._scope.push_record(
-            ref=ref, value=value,
+            ref=ref, value=value, data_type=data_type,
             assert_has_line_matching=self._assert_has_line_matching_)
 
     def _get_record(self, ref):
