@@ -6,65 +6,65 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import typing
+
 import pandas as pd
 
 from qiime2 import Artifact, Metadata, CategoricalMetadataColumn
-
 from qiime2.plugin import UsageAction, UsageInputs, UsageOutputNames
-
 from .type import IntSequence1, IntSequence2, Mapping, SingleInt
 
 
-def ints1_factory():
+def ints1_factory() -> Artifact:
     return Artifact.import_data(IntSequence1, [0, 1, 2])
 
 
-def ints2_factory():
+def ints2_factory() -> Artifact:
     return Artifact.import_data(IntSequence1, [3, 4, 5])
 
 
-def ints3_factory():
+def ints3_factory() -> Artifact:
     return Artifact.import_data(IntSequence2, [6, 7, 8])
 
 
-def mapping1_factory():
+def mapping1_factory() -> Artifact:
     return Artifact.import_data(Mapping, {'a': 42})
 
 
-def md1_factory():
+def md1_factory() -> Metadata:
     return Metadata(pd.DataFrame({'a': ['1', '2', '3']},
                                  index=pd.Index(['0', '1', '2'],
                                                 name='id')))
 
 
-def md2_factory():
+def md2_factory() -> Metadata:
     return Metadata(pd.DataFrame({'b': ['4', '5', '6']},
                                  index=pd.Index(['0', '1', '2'],
                                                 name='id')))
 
 
-def mdc1_factory():
+def mdc1_factory() -> CategoricalMetadataColumn:
     return CategoricalMetadataColumn(pd.Series(['1', '2', '3'],
                                      name='a',
                                      index=pd.Index(['0', '1', '2'],
                                                     name='id')))
 
 
-def int_sequence_list_factory():
+def int_sequence_list_factory() -> typing.List[Artifact]:
     int1 = ints1_factory()
     int2 = ints2_factory()
     return [int1, int2]
 
 
-def single_int1_factory():
+def single_int1_factory() -> Artifact:
     return Artifact.import_data(SingleInt, 10)
 
 
-def single_int2_factory():
+def single_int2_factory() -> Artifact:
     return Artifact.import_data(SingleInt, 11)
 
 
-def single_int_set_factory():
+def single_int_set_factory() -> typing.Set[Artifact]:
     single_int1 = single_int1_factory()
     single_int2 = single_int2_factory()
     return {single_int1, single_int2}

@@ -13,7 +13,7 @@ from qiime2.core.type import signature
 from qiime2.core.testing.util import get_dummy_plugin
 from qiime2.core.testing.type import Mapping
 from qiime2.sdk import usage, action
-from qiime2 import plugin
+from qiime2 import plugin, Artifact
 
 
 class TestCaseUsage(unittest.TestCase):
@@ -336,8 +336,11 @@ class TestUsageBaseClass(TestCaseUsage):
         super().setUp()
 
         class Usage(usage.Usage):
-            pass
+            def _init_data_(self, ref, factory): return factory()
         self.Usage = Usage
+
+    def artifact_data_factory(self) -> Artifact:
+        return Artifact.import_data('IntSequence1', [0, 1, 2])
 
     def test_get_result_invalid(self):
         use = self.Usage()
@@ -354,6 +357,14 @@ class TestUsageBaseClass(TestCaseUsage):
         use = self.Usage()
         with self.assertRaisesRegex(ValueError, 'two or more'):
             use.merge_metadata('foo')
+
+    def test_init_data_artifact_success(self):
+        use = self.Usage()
+        obs = use.init_data('ref1', self.artifact_data_factory)
+
+        self.assertEqual(obs.data_type, Artifact)
+        # sanity check the results
+        self.assertEqual(obs.result.view(list), [0, 1, 2])
 
 
 class TestScopeRecord(TestCaseUsage):

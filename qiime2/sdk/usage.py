@@ -9,8 +9,9 @@
 import abc
 import re
 import types
+import typing
 
-from qiime2 import sdk
+from qiime2 import sdk, metadata
 
 # TODO: docstrings
 
@@ -167,6 +168,7 @@ class UsageOutputNames:
 
 class ScopeRecord:
     def __init__(self, ref: str, value: object = None,
+                 data_type: object = None,
                  assert_has_line_matching: callable = None):
         if assert_has_line_matching is not None and \
                 not callable(assert_has_line_matching):
@@ -175,6 +177,7 @@ class ScopeRecord:
 
         self.ref = ref
         self._result = value
+        self._data_type = data_type
         self._assert_has_line_matching_ = assert_has_line_matching
 
     def __repr__(self):
@@ -183,6 +186,10 @@ class ScopeRecord:
     @property
     def result(self):
         return self._result
+
+    @property
+    def data_type(self):
+        return self._data_type
 
     def assert_has_line_matching(self, label, path, expression):
         return self._assert_has_line_matching_(self.ref, label, path,
@@ -200,8 +207,9 @@ class Scope:
     def records(self):
         return types.MappingProxyType(self._records)
 
-    def push_record(self, ref, value, assert_has_line_matching=None):
-        record = ScopeRecord(ref=ref, value=value,
+    def push_record(self, ref, value, data_type,
+                    assert_has_line_matching=None):
+        record = ScopeRecord(ref=ref, value=value, data_type=data_type,
                              assert_has_line_matching=assert_has_line_matching)
         self._records[ref] = record
         return record
@@ -216,10 +224,23 @@ class Scope:
 class Usage(metaclass=abc.ABCMeta):
     def __init__(self):
         self._scope = Scope()
+        self.SINGLE_TYPES = {
+            sdk.Artifact,
+            metadata.Metadata,
+            metadata.MetadataColumn,
+            metadata.CategoricalMetadataColumn,
+            metadata.NumericMetadataColumn,
+        }
+        self.COLLECTION_TYPES = {
+            typing.List[sdk.Artifact],
+            typing.Set[sdk.Artifact],
+        }
+        self.FACTORY_TYPES = self.SINGLE_TYPES.union(self.COLLECTION_TYPES)
 
     def init_data(self, ref, factory):
+        return_type = self._validate_factory_sig(factory)
         value = self._init_data_(ref, factory)
-        return self._push_record(ref, value)
+        return self._push_record(ref, value, return_type)
 
     def _init_data_(self, ref, factory):
         raise NotImplementedError
@@ -278,9 +299,9 @@ class Usage(metaclass=abc.ABCMeta):
             ref = outputs.get(output)
             self._push_record(ref, result)
 
-    def _push_record(self, ref, value):
+    def _push_record(self, ref, value, data_type=None):
         return self._scope.push_record(
-            ref=ref, value=value,
+            ref=ref, value=value, data_type=data_type,
             assert_has_line_matching=self._assert_has_line_matching_)
 
     def _get_record(self, ref):
@@ -288,6 +309,23 @@ class Usage(metaclass=abc.ABCMeta):
 
     def _get_records(self):
         return self._scope.records
+
+    def _validate_factory_sig(self, factory):
+        annotations = factory.__annotations__.copy()
+        return_type = annotations.pop('return', None)
+
+        if return_type is None:
+            raise Exception('foo')
+
+        if not any([issubclass(return_type, t) for t in self.SINGLE_TYPES]):
+            if not any([return_type == c for c in self.COLLECTION_TYPES]):
+                raise Exception('bar')
+
+        # signature shouldn't declare any inputs
+        if annotations:
+            raise Exception('baz')
+
+        return return_type
 
 
 class DiagnosticUsage(Usage):
