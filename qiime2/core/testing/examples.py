@@ -10,8 +10,6 @@ import pandas as pd
 
 from qiime2 import Artifact, Metadata
 
-from qiime2.plugin import UsageAction, UsageInputs, UsageOutputNames
-
 from .type import IntSequence1, IntSequence2, Mapping, SingleInt
 
 
@@ -58,9 +56,9 @@ def concatenate_ints_simple(use):
 
     use.comment('This example demonstrates basic usage.')
     use.action(
-        UsageAction(plugin_id='dummy_plugin', action_id='concatenate_ints'),
-        UsageInputs(ints1=ints_a, ints2=ints_b, ints3=ints_c, int1=4, int2=2),
-        UsageOutputNames(concatenated_ints='ints_d'),
+        use.plugin_action(plugin_id='dummy_plugin', action_id='concatenate_ints'),
+        use.map_inputs(ints1=ints_a, ints2=ints_b, ints3=ints_c, int1=4, int2=2),
+        use.map_outputs(concatenated_ints='ints_d'),
     )
 
 

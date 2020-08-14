@@ -9,7 +9,9 @@
 import abc
 import re
 import types
+import typing
 
+# these should be tweaked to be relative imports, I think
 from qiime2 import sdk, metadata
 
 # TODO: docstrings
@@ -161,7 +163,8 @@ class UsageOutputNames:
 
 class ScopeRecord:
     def __init__(self, ref: str, value: object, source: str,
-                 assert_has_line_matching: callable = None):
+                 assert_has_line_matching: callable = None) -> \
+            typing.Union[sdk.Artifact, sdk.Visualization, metadata.Metadata]:
         if assert_has_line_matching is not None and \
                 not callable(assert_has_line_matching):
             raise TypeError('Value for `assert_has_line_matching` should be a '
@@ -217,6 +220,18 @@ class Scope:
 class Usage(metaclass=abc.ABCMeta):
     def __init__(self):
         self._scope = Scope()
+
+    @staticmethod
+    def plugin_action(*args, **kwargs):
+        return UsageAction(*args,**kwargs)
+
+    @staticmethod
+    def map_inputs(*args, **kwargs):
+        return UsageInputs(*args, **kwargs)
+
+    @staticmethod
+    def map_outputs(*args, **kwargs):
+        return UsageOutputNames(*args, **kwargs)
 
     def init_data(self, ref, factory):
         value = self._init_data_(ref, factory)
